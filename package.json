@@ -6,7 +6,8 @@
   "license": "ISC",
   "scripts": {
     "prev_start": "npm run build && cross-env NODE_ENV=production node dist/server.js",
-    "start": "cross-env NODE_ENV=development nodemon && npm run resources",
+    "dev": "cross-env NODE_ENV=development nodemon",
+    "start": "cross-env NODE_ENV=development nodemon",
     "build": "swc src -d dist --source-maps --copy-files && npm run resources",
     "build:tsc": "tsc && tsc-alias",
     "test": "jest --forceExit --detectOpenHandles",
