@@ -6,12 +6,12 @@ import { HttpException } from '@exceptions/HttpException';
 import { DataStoredInToken, TokenData } from '@interfaces/auth.interface';
 import { User } from '@interfaces/users.interface';
 import { isEmpty } from '@utils/util';
-import userRepository from 'data-access/users.repository';
-import { UserModel } from '@/data-access/models/user.model';
-import { UserNameNotFoundExcrption } from '@/exceptions/UserNameNotFoundException';
-import { PasswordMatchException } from '@/exceptions/PasswordMatchException';
-import { EmailNotUniqueException } from '@/exceptions/EmailNotUniqueException';
-import { UserNameNotUniqueException } from '@/exceptions/UserNameNotUniqueException copy';
+import userRepository from '@/dataAccess/users.repository';
+import { UserModel } from '@/dataAccess/models/user.model';
+import { UserNameNotFoundExcrption } from '@exceptions/UserNameNotFoundException';
+import { PasswordMatchException } from '@exceptions/PasswordMatchException';
+import { EmailNotUniqueException } from '@exceptions/EmailNotUniqueException';
+import { UserNameNotUniqueException } from '@exceptions/UserNameNotUniqueException copy';
 
 class AuthService {
   public async signup(userData: CreateUserDto): Promise<{ tokenData: TokenData; user: User }> {

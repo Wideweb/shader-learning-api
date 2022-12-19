@@ -1,9 +1,9 @@
 import { HttpException } from '@exceptions/HttpException';
 import { isEmpty } from '@utils/util';
-import { TaskDto, TaskSubmitDto, TaskSubmitResultDto } from '@/dtos/tasks.dto';
+import { TaskDto, TaskSubmitDto, TaskSubmitResultDto } from '@dtos/tasks.dto';
 import glService from './gl.service';
-import taskRepository from '@/data-access/tasks.repository';
-import { TaskModel, UserTaskModel } from '@/data-access/models/task.model';
+import taskRepository from '@dataAccess/tasks.repository';
+import { TaskModel, UserTaskModel } from '@dataAccess/models/task.model';
 import fileSystem from 'fs';
 import path from 'path';
 import { logger } from '@utils/logger';

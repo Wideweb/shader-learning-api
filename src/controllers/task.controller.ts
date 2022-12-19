@@ -1,8 +1,8 @@
 import { NextFunction, Response } from 'express';
 import { TaskDto, TaskSubmitDto, TaskSubmitResultDto } from '@dtos/tasks.dto';
 import { logger } from '@utils/logger';
-import taskService from '@/services/tasks.service';
-import { User } from '@/interfaces/users.interface';
+import taskService from '@services/tasks.service';
+import { User } from '@interfaces/users.interface';
 import { RequestWithUser } from '@interfaces/auth.interface';
 
 class TasksController {

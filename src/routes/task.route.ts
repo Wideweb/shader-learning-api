@@ -1,9 +1,9 @@
 import { Router } from 'express';
 import { Routes } from '@interfaces/routes.interface';
 import validationMiddleware from '@middlewares/validation.middleware';
-import TasksController from '@/controllers/task.controller';
-import { TaskSubmitDto } from '@/dtos/tasks.dto';
-import authMiddleware from '@/middlewares/auth.middleware';
+import TasksController from '@controllers/task.controller';
+import { TaskSubmitDto } from '@dtos/tasks.dto';
+import authMiddleware from '@middlewares/auth.middleware';
 
 class TasksRoute implements Routes {
   public path = '/tasks';

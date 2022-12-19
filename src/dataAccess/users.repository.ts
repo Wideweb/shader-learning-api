@@ -1,5 +1,5 @@
 import { query } from 'mssql';
-import { UserModel } from '@/data-access/models/user.model';
+import { UserModel } from '@/dataAccess/models/user.model';
 
 export class UserRepository {
   public async findUserById(userId: number): Promise<UserModel> {
@@ -31,5 +31,4 @@ export class UserRepository {
 }
 
 const userRepository = new UserRepository();
-
 export default userRepository;

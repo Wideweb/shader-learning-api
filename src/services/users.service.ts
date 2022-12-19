@@ -1,8 +1,8 @@
 import { HttpException } from '@exceptions/HttpException';
 import { User } from '@interfaces/users.interface';
 import { isEmpty } from '@utils/util';
-import { UserModel } from '@/data-access/models/user.model';
-import userRepository from '@/data-access/users.repository';
+import { UserModel } from '@dataAccess/models/user.model';
+import userRepository from '@dataAccess/users.repository';
 
 class UserService {
   public async findUserById(userId: number): Promise<User> {
