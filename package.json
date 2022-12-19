@@ -7,7 +7,7 @@
   "scripts": {
     "prev_start": "npm run build && NODE_ENV=production node dist/server.js",
     "dev": "NODE_ENV=development nodemon",
-    "start": "NODE_ENV=development node dist/server.js",
+    "start": "node dist/server.js",
     "build": "swc src -d dist --source-maps --copy-files && npm run resources",
     "build:tsc": "tsc && tsc-alias",
     "test": "jest --forceExit --detectOpenHandles",
@@ -64,7 +64,6 @@
     "@typescript-eslint/eslint-plugin": "^5.29.0",
     "@typescript-eslint/parser": "^5.29.0",
     "copyfiles": "^2.4.1",
-    "cross-env": "^7.0.3",
     "eslint": "^8.20.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-prettier": "^4.2.1",
