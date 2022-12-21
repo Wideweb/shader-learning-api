@@ -13,3 +13,12 @@ export interface UserTaskModel {
   Accepted: 0 | 1;
   Rejected: 0 | 1;
 }
+
+export interface UserTaskResultModel {
+  Id: number;
+  Name: string;
+  Order: number;
+  Score: number;
+  Accepted: 0 | 1;
+  Rejected: 0 | 1;
+}

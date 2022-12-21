@@ -16,6 +16,7 @@ class TasksRoute implements Routes {
 
   private initializeRoutes() {
     this.router.get(`${this.path}/next`, authMiddleware, this.tasksController.getNext);
+    this.router.get(`${this.path}/progress`, authMiddleware, this.tasksController.getProgress);
     this.router.post(
       `${this.path}/:id/submitWithValidation`,
       authMiddleware,

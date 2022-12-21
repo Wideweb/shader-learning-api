@@ -64,3 +64,17 @@ export class TaskSubmitDto {
   @IsNumber()
   match: number;
 }
+
+export class UserTaskResultDto {
+  id: number;
+
+  name: string;
+
+  order: number;
+
+  accepted: boolean;
+
+  rejected: boolean;
+
+  score: number;
+}

@@ -1,5 +1,5 @@
 import { query } from 'mssql';
-import { TaskModel, UserTaskModel } from './models/task.model';
+import { TaskModel, UserTaskModel, UserTaskResultModel } from './models/task.model';
 
 export class TaskRepository {
   public async findById(id: number): Promise<TaskModel> {
@@ -60,6 +60,19 @@ export class TaskRepository {
           [dbo].[UserTask].[User_Id] = '${userId}' AND [dbo].[UserTask].[Task_Id] = '${taskId}'
     `);
     return result.recordset[0];
+  }
+
+  public async getUserTaskResults(userId: number): Promise<UserTaskResultModel[]> {
+    const result = await query<UserTaskResultModel>(`
+      SELECT [dbo].[Tasks].[Id], [dbo].[Tasks].[Name], [dbo].[Tasks].[Order], [dbo].[UserTask].[Score], [dbo].[UserTask].[Accepted], [dbo].[UserTask].[Rejected]
+      FROM
+          [dbo].[UserTask]
+      INNER JOIN [dbo].[Tasks] ON [dbo].[UserTask].[Task_Id] = [dbo].[Tasks].[Id]
+      WHERE
+          [dbo].[UserTask].[User_Id] = '${userId}'
+      ORDER BY [dbo].[Tasks].[Order]
+    `);
+    return result.recordset;
   }
 
   public async findNotAccepted(userId: number): Promise<TaskModel> {

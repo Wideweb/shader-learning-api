@@ -1,5 +1,5 @@
 import { NextFunction, Response } from 'express';
-import { TaskDto, TaskSubmitDto, TaskSubmitResultDto, TaskSubmitWithValidationDto } from '@dtos/tasks.dto';
+import { TaskDto, TaskSubmitDto, TaskSubmitResultDto, TaskSubmitWithValidationDto, UserTaskResultDto } from '@dtos/tasks.dto';
 import { logger } from '@utils/logger';
 import taskService from '@services/tasks.service';
 import { User } from '@interfaces/users.interface';
@@ -12,6 +12,17 @@ class TasksController {
       const task: TaskDto = await taskService.getNextTaskForUser(userData.id);
 
       res.status(200).json(task);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public getProgress = async (req: RequestWithUser, res: Response, next: NextFunction) => {
+    try {
+      const userData: User = req.user;
+      const results: UserTaskResultDto[] = await taskService.getUserTaskResults(userData.id);
+
+      res.status(200).json(results);
     } catch (error) {
       next(error);
     }

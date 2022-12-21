@@ -1,6 +1,6 @@
 import { HttpException } from '@exceptions/HttpException';
 import { isEmpty } from '@utils/util';
-import { TaskDto, TaskSubmitDto, TaskSubmitResultDto, TaskSubmitWithValidationDto } from '@dtos/tasks.dto';
+import { TaskDto, UserTaskResultDto, TaskSubmitDto, TaskSubmitResultDto, TaskSubmitWithValidationDto } from '@dtos/tasks.dto';
 import glService from './gl.service';
 import taskRepository from '@dataAccess/tasks.repository';
 import { TaskModel, UserTaskModel } from '@dataAccess/models/task.model';
@@ -27,6 +27,19 @@ class TaskService {
       cost: task.Cost,
       threshold: task.Threshold,
     };
+  }
+
+  public async getUserTaskResults(userId: number): Promise<UserTaskResultDto[]> {
+    const tasks = await taskRepository.getUserTaskResults(userId);
+
+    return tasks.map(task => ({
+      id: task.Id,
+      name: task.Name,
+      order: task.Order,
+      score: task.Score,
+      accepted: task.Accepted > 0,
+      rejected: task.Rejected > 0,
+    }));
   }
 
   public async getNextTaskForUser(userId: number): Promise<TaskDto> {
