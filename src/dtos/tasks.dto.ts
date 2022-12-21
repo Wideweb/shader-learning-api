@@ -40,6 +40,17 @@ export class TaskSubmitResultDto {
   accepted: boolean;
 }
 
+export class TaskSubmitWithValidationDto {
+  @IsNumber()
+  id: number;
+
+  @IsString()
+  vertexShader: string;
+
+  @IsString()
+  fragmentShader: string;
+}
+
 export class TaskSubmitDto {
   @IsNumber()
   id: number;
@@ -49,4 +60,7 @@ export class TaskSubmitDto {
 
   @IsString()
   fragmentShader: string;
+
+  @IsNumber()
+  match: number;
 }

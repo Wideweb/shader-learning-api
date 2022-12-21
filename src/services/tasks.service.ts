@@ -1,6 +1,6 @@
 import { HttpException } from '@exceptions/HttpException';
 import { isEmpty } from '@utils/util';
-import { TaskDto, TaskSubmitDto, TaskSubmitResultDto } from '@dtos/tasks.dto';
+import { TaskDto, TaskSubmitDto, TaskSubmitResultDto, TaskSubmitWithValidationDto } from '@dtos/tasks.dto';
 import glService from './gl.service';
 import taskRepository from '@dataAccess/tasks.repository';
 import { TaskModel, UserTaskModel } from '@dataAccess/models/task.model';
@@ -53,7 +53,7 @@ class TaskService {
     };
   }
 
-  public async submitTask(userId: number, taskSubmitData: TaskSubmitDto): Promise<TaskSubmitResultDto> {
+  public async submitTaskWithValidation(userId: number, taskSubmitData: TaskSubmitWithValidationDto): Promise<TaskSubmitResultDto> {
     if (isEmpty(taskSubmitData) || isEmpty(taskSubmitData.fragmentShader)) throw new HttpException(400, 'Task data is empty');
 
     const task = await this.getTask(taskSubmitData.id);
@@ -86,6 +86,19 @@ class TaskService {
     const matchDegree = matches / (256 * 256);
     const score = matchDegree * task.cost;
     const match = matchDegree * 100;
+    const accepted = match >= task.threshold;
+
+    const result: TaskSubmitResultDto = { accepted, score, match };
+    await this.setTaskSubmitionResult(userId, task.id, result);
+    return result;
+  }
+
+  public async submitTask(userId: number, taskSubmitData: TaskSubmitDto): Promise<TaskSubmitResultDto> {
+    if (isEmpty(taskSubmitData) || isEmpty(taskSubmitData.fragmentShader)) throw new HttpException(400, 'Task data is empty');
+
+    const task = await this.getTask(taskSubmitData.id);
+    const score = taskSubmitData.match * task.cost;
+    const match = taskSubmitData.match * 100;
     const accepted = match >= task.threshold;
 
     const result: TaskSubmitResultDto = { accepted, score, match };

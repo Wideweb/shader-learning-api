@@ -33,10 +33,10 @@ class GlService {
     const geometry = new THREE.PlaneGeometry(1, 1);
     const material = new THREE.ShaderMaterial({
       uniforms: {
-        resolution: {
+        iResolution: {
           value: new THREE.Vector2(width, height),
         },
-        time: { value: 0.0 },
+        iTime: { value: 0.0 },
       },
       vertexShader,
       fragmentShader,

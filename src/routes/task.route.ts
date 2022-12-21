@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { Routes } from '@interfaces/routes.interface';
 import validationMiddleware from '@middlewares/validation.middleware';
 import TasksController from '@controllers/task.controller';
-import { TaskSubmitDto } from '@dtos/tasks.dto';
+import { TaskSubmitDto, TaskSubmitWithValidationDto } from '@dtos/tasks.dto';
 import authMiddleware from '@middlewares/auth.middleware';
 
 class TasksRoute implements Routes {
@@ -16,6 +16,12 @@ class TasksRoute implements Routes {
 
   private initializeRoutes() {
     this.router.get(`${this.path}/next`, authMiddleware, this.tasksController.getNext);
+    this.router.post(
+      `${this.path}/:id/submitWithValidation`,
+      authMiddleware,
+      validationMiddleware(TaskSubmitWithValidationDto, 'body'),
+      this.tasksController.submitWithValidation,
+    );
     this.router.post(`${this.path}/:id/submit`, authMiddleware, validationMiddleware(TaskSubmitDto, 'body'), this.tasksController.submit);
     this.router.get(`${this.path}/score`, authMiddleware, this.tasksController.getScore);
   }
