@@ -79,7 +79,10 @@ CREATE TABLE [dbo].[Tasks](
 	[Name] [nvarchar](max) NOT NULL,
     [Threshold] [int] NOT NULL,
     [Order] [int] NOT NULL,
-    [Cost] [int] NOT NULL
+    [Cost] [int] NOT NULL,
+	[VertexShader] [text] NULL,
+	[FragmentShader] [text] NULL,
+	[Visibility] [bit] DEFAULT 0,
 )
 GO
 ALTER TABLE [dbo].[Tasks] ADD  CONSTRAINT [PK_dbo.Tasks] PRIMARY KEY CLUSTERED 
@@ -176,7 +179,9 @@ CREATE TABLE [dbo].[UserTask](
     [Task_Id] [int] NOT NULL,
     [Score] [int] NOT NULL,
     [Accepted] [bit] DEFAULT 0,
-    [Rejected] [bit] DEFAULT 0
+    [Rejected] [bit] DEFAULT 0,
+	[VertexShader] [text] NULL,
+	[FragmentShader] [text] NULL
 )
 GO
 ALTER TABLE [dbo].[UserTask] ADD CONSTRAINT [PK_dbo.UserTask] PRIMARY KEY CLUSTERED 

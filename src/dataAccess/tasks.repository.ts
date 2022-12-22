@@ -1,5 +1,6 @@
+import { logger } from '@/utils/logger';
 import { query } from 'mssql';
-import { TaskModel, UserTaskModel, UserTaskResultModel } from './models/task.model';
+import { TaskListModel, TaskModel, UserTaskModel, UserTaskResultModel } from './models/task.model';
 
 export class TaskRepository {
   public async findById(id: number): Promise<TaskModel> {
@@ -8,20 +9,56 @@ export class TaskRepository {
   }
 
   public async findByName(name: string): Promise<TaskModel> {
-    const result = await query<TaskModel>(`SELECT TOP (1) * FROM [dbo].[Tasks] WHERE [Email] = '${name}'`);
+    const result = await query<TaskModel>(`SELECT TOP (1) * FROM [dbo].[Tasks] WHERE [Name] = '${name}'`);
     return result.recordset[0];
   }
 
-  public async createTask(task: TaskModel): Promise<boolean> {
+  public async getLastTaskOrder(): Promise<number> {
+    const result = await query<number>(`SELECT TOP 1 ([Order]) FROM [dbo].[Tasks] ORDER BY [Order] DESC`);
+    return result.recordset[0][''] || 0;
+  }
+
+  public async createTask(task: TaskModel): Promise<number> {
+    try {
+      const result = await query(`
+          INSERT INTO [dbo].[Tasks] ([Name], [Threshold], [Order], [Cost], [Visibility])
+          VALUES ('${task.Name}', ${task.Threshold}, ${task.Order}, ${task.Cost}, ${task.Visibility});
+          SELECT SCOPE_IDENTITY();
+      `);
+      return result.recordset[0][''];
+    } catch (err) {
+      logger.error(
+        `DB: Failed to create task | Name:${task.Name}, Threshold:${task.Threshold}, Order:${task.Order}, Cost:${task.Cost}, error:${err.message}`,
+      );
+      return -1;
+    }
+  }
+
+  public async updateTask(task: TaskModel): Promise<boolean> {
     try {
       await query(`
-          INSERT INTO [dbo].[Tasks] ([Name], [Threshold], [Order], [Cost])
-          VALUES ('${task.Name}', '${task.Threshold}', '${task.Order}', '${task.Cost}');
+        UPDATE [dbo].[Tasks]
+        SET 
+          [Name] = '${task.Name}', [Threshold] = ${task.Threshold}, [Order] = ${task.Order}, [Cost] = ${task.Cost}, [Visibility] = ${task.Visibility}
+        WHERE 
+          [Id] = ${task.Id};
       `);
       return true;
-    } catch {
+    } catch (err) {
+      logger.error(
+        `DB: Failed to update task | Name:${task.Name}, Threshold:${task.Threshold}, Order:${task.Order}, Cost:${task.Cost}, error:${err.message}`,
+      );
       return false;
     }
+  }
+
+  public async getTaskList(): Promise<TaskListModel[]> {
+    const result = await query<TaskListModel>(`
+      SELECT TOP(100) [dbo].[Tasks].[Id], [dbo].[Tasks].[Name], [dbo].[Tasks].[Order], [dbo].[Tasks].[Threshold], [dbo].[Tasks].[Cost], [dbo].[Tasks].[Visibility]
+      FROM [dbo].[Tasks]
+      ORDER BY [dbo].[Tasks].[Order]
+    `);
+    return result.recordset;
   }
 
   public async createUserTask(task: UserTaskModel): Promise<boolean> {
@@ -83,7 +120,7 @@ export class TaskRepository {
           [dbo].[UserTask]
       INNER JOIN [dbo].[Tasks] ON [dbo].[UserTask].[Task_Id] = [dbo].[Tasks].[Id]
       WHERE
-          [dbo].[UserTask].[User_Id] = '${userId}' AND [dbo].[UserTask].[Accepted] = 0 
+          [dbo].[UserTask].[User_Id] = '${userId}' AND [dbo].[UserTask].[Accepted] = 0 AND [dbo].[Tasks].[Visibility] = 1
     `);
     return result.recordset[0];
   }
@@ -96,7 +133,7 @@ export class TaskRepository {
           [dbo].[Tasks]
       LEFT JOIN [dbo].[UserTask] ON [dbo].[UserTask].[Task_Id] = [dbo].[Tasks].[Id] AND [dbo].[UserTask].[User_Id] = ${userId}
       WHERE
-          [dbo].[UserTask].[Task_Id] IS NULL
+          [dbo].[UserTask].[Task_Id] IS NULL AND [dbo].[Tasks].[Visibility] = 1
     `);
     return result.recordset[0];
   }

@@ -1,7 +1,9 @@
-import { IsNumber, IsString } from 'class-validator';
+import { IsArray, IsBoolean, IsNumber, IsString } from 'class-validator';
 
 export class TaskDto {
   id: number;
+
+  name: string;
 
   vertexShader: string;
 
@@ -16,6 +18,40 @@ export class TaskDto {
   cost: number;
 
   threshold: number;
+}
+
+export class CreateTaskDto {
+  @IsString()
+  name: string;
+
+  @IsString()
+  vertexShader: string;
+
+  @IsString()
+  fragmentShader: string;
+
+  @IsArray()
+  hints: TaskHintDto[];
+
+  @IsArray()
+  restrictions: TaskRestrictionDto[];
+
+  @IsNumber()
+  order: number;
+
+  @IsNumber()
+  cost: number;
+
+  @IsNumber()
+  threshold: number;
+
+  @IsBoolean()
+  visibility: boolean;
+}
+
+export class UpdateTaskDto extends CreateTaskDto {
+  @IsNumber()
+  id: number;
 }
 
 export class TaskHintDto {
@@ -65,6 +101,14 @@ export class TaskSubmitDto {
   match: number;
 }
 
+export class UserTaskDto {
+  task: TaskDto;
+
+  vertexShader: string;
+
+  fragmentShader: string;
+}
+
 export class UserTaskResultDto {
   id: number;
 
@@ -77,4 +121,13 @@ export class UserTaskResultDto {
   rejected: boolean;
 
   score: number;
+}
+
+export interface TaskListDto {
+  id: number;
+  name: string;
+  order: number;
+  threshold: number;
+  cost: number;
+  visibility: boolean;
 }

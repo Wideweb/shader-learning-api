@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { Routes } from '@interfaces/routes.interface';
 import validationMiddleware from '@middlewares/validation.middleware';
 import TasksController from '@controllers/task.controller';
-import { TaskSubmitDto, TaskSubmitWithValidationDto } from '@dtos/tasks.dto';
+import { CreateTaskDto, TaskSubmitDto, TaskSubmitWithValidationDto, UpdateTaskDto } from '@dtos/tasks.dto';
 import authMiddleware from '@middlewares/auth.middleware';
 
 class TasksRoute implements Routes {
@@ -15,6 +15,12 @@ class TasksRoute implements Routes {
   }
 
   private initializeRoutes() {
+    this.router.post(`${this.path}/create`, authMiddleware, validationMiddleware(CreateTaskDto, 'body'), this.tasksController.create);
+    this.router.get(`${this.path}/:id/get`, authMiddleware, this.tasksController.get);
+    this.router.get(`${this.path}/:id/toggleVisibility`, authMiddleware, this.tasksController.toggleVisibility);
+    this.router.get(`${this.path}/list`, authMiddleware, this.tasksController.list);
+    this.router.put(`${this.path}/:id/update`, authMiddleware, validationMiddleware(UpdateTaskDto, 'body'), this.tasksController.update);
+    this.router.get(`${this.path}/:id/userTask`, authMiddleware, this.tasksController.getUserTask);
     this.router.get(`${this.path}/next`, authMiddleware, this.tasksController.getNext);
     this.router.get(`${this.path}/progress`, authMiddleware, this.tasksController.getProgress);
     this.router.post(

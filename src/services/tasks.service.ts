@@ -1,32 +1,121 @@
 import { HttpException } from '@exceptions/HttpException';
 import { isEmpty } from '@utils/util';
-import { TaskDto, UserTaskResultDto, TaskSubmitDto, TaskSubmitResultDto, TaskSubmitWithValidationDto } from '@dtos/tasks.dto';
+import {
+  TaskDto,
+  UserTaskResultDto,
+  TaskSubmitDto,
+  TaskSubmitResultDto,
+  TaskSubmitWithValidationDto,
+  UserTaskDto,
+  CreateTaskDto,
+  UpdateTaskDto,
+  TaskListDto,
+} from '@dtos/tasks.dto';
 import glService from './gl.service';
 import taskRepository from '@dataAccess/tasks.repository';
 import { TaskModel, UserTaskModel } from '@dataAccess/models/task.model';
-import fileSystem from 'fs';
-import path from 'path';
 import { logger } from '@utils/logger';
+import { User } from '@/interfaces/users.interface';
+import amazonFileStorage from './amazonFileStorage';
+import { TaskNameNotUniqueException } from '@/exceptions/TaskNameNotUniqueException';
 
 class TaskService {
+  public async createTask(task: CreateTaskDto): Promise<number> {
+    const findTask = await taskRepository.findByName(task.name);
+    if (findTask) throw new TaskNameNotUniqueException(task.name);
+
+    let order = await taskRepository.getLastTaskOrder();
+    order++;
+
+    const taskId = await taskRepository.createTask({
+      Id: -1,
+      Name: task.name,
+      Threshold: task.threshold,
+      Order: order,
+      Cost: task.cost,
+      Visibility: task.visibility ? 0 : 1,
+    });
+
+    if (taskId < 0) {
+      throw new HttpException(500, 'Task create error');
+    }
+
+    await amazonFileStorage.save(`Tasks/${taskId}`, 'vertex.glsl', task.vertexShader);
+    await amazonFileStorage.save(`Tasks/${taskId}`, 'fragment.glsl', task.fragmentShader);
+
+    return taskId;
+  }
+
+  public async updateTask(task: UpdateTaskDto): Promise<number> {
+    const findTask = await taskRepository.findByName(task.name);
+    if (findTask && findTask.Id != task.id) throw new TaskNameNotUniqueException(task.name);
+
+    const result = await taskRepository.updateTask({
+      Id: task.id,
+      Name: task.name,
+      Threshold: task.threshold,
+      Order: task.order,
+      Cost: task.cost,
+      Visibility: task.visibility ? 0 : 1,
+    });
+
+    if (!result) {
+      throw new HttpException(500, 'Task update error');
+    }
+
+    await amazonFileStorage.save(`Tasks/${task.id}`, 'vertex.glsl', task.vertexShader);
+    await amazonFileStorage.save(`Tasks/${task.id}`, 'fragment.glsl', task.fragmentShader);
+
+    return task.id;
+  }
+
+  public async toggleTaskVisibility(id: number): Promise<boolean> {
+    const findTask = await taskRepository.findById(id);
+    if (!findTask) throw new HttpException(404, 'Task not found');
+
+    findTask.Visibility = findTask.Visibility == 0 ? 1 : 0;
+    const result = await taskRepository.updateTask(findTask);
+
+    if (!result) {
+      throw new HttpException(500, 'Task update error');
+    }
+
+    return findTask.Visibility == 1;
+  }
+
   public async getTask(id: number): Promise<TaskDto> {
     const task: TaskModel = await taskRepository.findById(id);
     if (task == null) {
-      throw new HttpException(404, "Task doesn't exist");
+      throw new HttpException(404, `Task with id=${id} doesn't exist`);
     }
 
-    const { vertexShader, fragmentShader } = this.getTaskSources(task.Name);
+    const vertexBuffer = await amazonFileStorage.get(`Tasks/${task.Id}`, 'vertex.glsl');
+    const fragmentBuffer = await amazonFileStorage.get(`Tasks/${task.Id}`, 'fragment.glsl');
 
     return {
       id: task.Id,
-      vertexShader,
-      fragmentShader,
+      name: task.Name,
+      vertexShader: vertexBuffer ? vertexBuffer.toString() : '',
+      fragmentShader: fragmentBuffer ? fragmentBuffer.toString() : '',
       hints: [],
       restrictions: [],
       order: task.Order,
       cost: task.Cost,
       threshold: task.Threshold,
     };
+  }
+
+  public async getTaskList(): Promise<TaskListDto[]> {
+    const tasks = await taskRepository.getTaskList();
+
+    return tasks.map(task => ({
+      id: task.Id,
+      name: task.Name,
+      order: task.Order,
+      threshold: task.Threshold,
+      cost: task.Cost,
+      visibility: task.Visibility == 1,
+    }));
   }
 
   public async getUserTaskResults(userId: number): Promise<UserTaskResultDto[]> {
@@ -42,27 +131,60 @@ class TaskService {
     }));
   }
 
-  public async getNextTaskForUser(userId: number): Promise<TaskDto> {
+  public async getNextTaskForUser(userId: number): Promise<UserTaskDto> {
     let task: TaskModel = await taskRepository.findNotAccepted(userId);
     if (!task) {
       task = await taskRepository.findNext(userId);
     }
 
     if (!task) {
-      return null;
+      return {
+        task: null,
+        vertexShader: '',
+        fragmentShader: '',
+      };
     }
 
-    const { vertexShader, fragmentShader } = this.getTaskSources(task.Name);
+    const taskVertexBuffer = await amazonFileStorage.get(`Tasks/${task.Id}`, 'vertex.glsl');
+    const taskFragmentBuffer = await amazonFileStorage.get(`Tasks/${task.Id}`, 'fragment.glsl');
+
+    const userVertexBuffer = await amazonFileStorage.get(`Users/${userId}/tasks/${task.Id}`, 'vertex.glsl');
+    const userFragmentBuffer = await amazonFileStorage.get(`Users/${userId}/tasks/${task.Id}`, 'fragment.glsl');
 
     return {
-      id: task.Id,
-      vertexShader,
-      fragmentShader,
-      hints: [],
-      restrictions: [],
-      order: task.Order,
-      cost: task.Cost,
-      threshold: task.Threshold,
+      task: {
+        id: task.Id,
+        name: task.Name,
+        vertexShader: taskVertexBuffer ? taskVertexBuffer.toString() : null,
+        fragmentShader: taskFragmentBuffer ? taskFragmentBuffer.toString() : null,
+        hints: [],
+        restrictions: [],
+        order: task.Order,
+        cost: task.Cost,
+        threshold: task.Threshold,
+      },
+      vertexShader: userVertexBuffer ? userVertexBuffer.toString() : null,
+      fragmentShader: userFragmentBuffer ? userFragmentBuffer.toString() : null,
+    };
+  }
+
+  public async getTaskForUser(userId: number, taskId: number): Promise<UserTaskDto> {
+    const task: TaskDto = await this.getTask(taskId);
+    if (!task) {
+      return {
+        task: null,
+        vertexShader: '',
+        fragmentShader: '',
+      };
+    }
+
+    const vertexBuffer = await amazonFileStorage.get(`Users/${userId}/tasks/${taskId}`, 'vertex.glsl');
+    const fragmentBuffer = await amazonFileStorage.get(`Users/${userId}/tasks/${taskId}`, 'fragment.glsl');
+
+    return {
+      task,
+      vertexShader: vertexBuffer ? vertexBuffer.toString() : null,
+      fragmentShader: fragmentBuffer ? fragmentBuffer.toString() : null,
     };
   }
 
@@ -74,7 +196,7 @@ class TaskService {
     const userTexture = glService.renderToTexture(taskSubmitData.vertexShader, taskSubmitData.fragmentShader, 256, 256);
     if (!userTexture) {
       const result: TaskSubmitResultDto = { accepted: false, score: 0, match: 0 };
-      await this.setTaskSubmitionResult(userId, task.id, result);
+      await this.setTaskSubmitionResult(userId, task.id, 0, false, taskSubmitData.vertexShader, taskSubmitData.fragmentShader);
       return result;
     }
 
@@ -102,11 +224,11 @@ class TaskService {
     const accepted = match >= task.threshold;
 
     const result: TaskSubmitResultDto = { accepted, score, match };
-    await this.setTaskSubmitionResult(userId, task.id, result);
+    await this.setTaskSubmitionResult(userId, task.id, score, accepted, taskSubmitData.vertexShader, taskSubmitData.fragmentShader);
     return result;
   }
 
-  public async submitTask(userId: number, taskSubmitData: TaskSubmitDto): Promise<TaskSubmitResultDto> {
+  public async submitTask(user: User, taskSubmitData: TaskSubmitDto): Promise<TaskSubmitResultDto> {
     if (isEmpty(taskSubmitData) || isEmpty(taskSubmitData.fragmentShader)) throw new HttpException(400, 'Task data is empty');
 
     const task = await this.getTask(taskSubmitData.id);
@@ -115,17 +237,25 @@ class TaskService {
     const accepted = match >= task.threshold;
 
     const result: TaskSubmitResultDto = { accepted, score, match };
-    await this.setTaskSubmitionResult(userId, task.id, result);
+    await this.setTaskSubmitionResult(user.id, task.id, score, accepted, taskSubmitData.vertexShader, taskSubmitData.fragmentShader);
+
     return result;
   }
 
-  public async setTaskSubmitionResult(userId: number, taskId: number, taskSubmitResult: TaskSubmitResultDto): Promise<boolean> {
+  private async setTaskSubmitionResult(
+    userId: number,
+    taskId: number,
+    score: number,
+    accepted: boolean,
+    vertexShader: string,
+    fragmentShader: string,
+  ): Promise<boolean> {
     const userTaskToSave: UserTaskModel = {
       User_Id: userId,
       Task_Id: taskId,
-      Score: taskSubmitResult.score,
-      Accepted: taskSubmitResult.accepted ? 1 : 0,
-      Rejected: taskSubmitResult.accepted ? 0 : 1,
+      Score: score,
+      Accepted: accepted ? 1 : 0,
+      Rejected: accepted ? 0 : 1,
     };
 
     const userTask = await taskRepository.findUserTask(userId, taskId);
@@ -137,6 +267,9 @@ class TaskService {
       saved = await taskRepository.createUserTask(userTaskToSave);
     }
 
+    await amazonFileStorage.save(`Users/${userId}/tasks/${taskId}`, 'vertex.glsl', vertexShader);
+    await amazonFileStorage.save(`Users/${userId}/tasks/${taskId}`, 'fragment.glsl', fragmentShader);
+
     if (!saved) {
       throw new HttpException(500, 'Task submition is not saved');
     }
@@ -147,21 +280,6 @@ class TaskService {
   public async getUserScore(userId: number): Promise<number> {
     const score: number = await taskRepository.getUserScore(userId);
     return score;
-  }
-
-  private getTaskSources(taskName: string): { vertexShader: string; fragmentShader: string } {
-    try {
-      const tasksFoder = '../resources/tasks';
-      const vertexPath = path.resolve(__dirname, tasksFoder, taskName.toLowerCase(), `vertex.glsl`);
-      const fragmentPath = path.resolve(__dirname, tasksFoder, taskName.toLowerCase(), `fragment.glsl`);
-
-      const vertexShader = fileSystem.readFileSync(vertexPath, 'utf8');
-      const fragmentShader = fileSystem.readFileSync(fragmentPath, 'utf8');
-
-      return { vertexShader, fragmentShader };
-    } catch (err) {
-      throw new HttpException(404, `Task ${taskName} sources doesn't exist`);
-    }
   }
 }
 

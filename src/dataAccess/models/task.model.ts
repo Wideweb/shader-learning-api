@@ -4,6 +4,16 @@ export interface TaskModel {
   Threshold: number;
   Order: number;
   Cost: number;
+  Visibility: 0 | 1;
+}
+
+export interface TaskListModel {
+  Id: number;
+  Name: string;
+  Order: number;
+  Threshold: number;
+  Cost: number;
+  Visibility: 0 | 1;
 }
 
 export interface UserTaskModel {

@@ -18,7 +18,9 @@
     "resources": "npx copyfiles src/resources/**/*.* dist/resources/"
   },
   "dependencies": {
+    "@aws-sdk/types": "^3.226.0",
     "@typegoose/typegoose": "^9.10.1",
+    "aws-sdk": "^2.1280.0",
     "bcrypt": "^5.0.1",
     "canvas": "^2.10.2",
     "class-transformer": "^0.5.1",
