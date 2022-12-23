@@ -9,6 +9,8 @@ export class TaskDto {
 
   fragmentShader: string;
 
+  description: string;
+
   hints: TaskHintDto[];
 
   restrictions: TaskRestrictionDto[];
@@ -29,6 +31,9 @@ export class CreateTaskDto {
 
   @IsString()
   fragmentShader: string;
+
+  @IsString()
+  description: string;
 
   @IsArray()
   hints: TaskHintDto[];

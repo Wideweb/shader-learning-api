@@ -42,6 +42,7 @@ class TaskService {
 
     await amazonFileStorage.save(`Tasks/${taskId}`, 'vertex.glsl', task.vertexShader);
     await amazonFileStorage.save(`Tasks/${taskId}`, 'fragment.glsl', task.fragmentShader);
+    await amazonFileStorage.save(`Tasks/${taskId}`, 'description.md', task.description);
 
     return taskId;
   }
@@ -65,6 +66,7 @@ class TaskService {
 
     await amazonFileStorage.save(`Tasks/${task.id}`, 'vertex.glsl', task.vertexShader);
     await amazonFileStorage.save(`Tasks/${task.id}`, 'fragment.glsl', task.fragmentShader);
+    await amazonFileStorage.save(`Tasks/${task.id}`, 'description.md', task.description);
 
     return task.id;
   }
@@ -91,12 +93,14 @@ class TaskService {
 
     const vertexBuffer = await amazonFileStorage.get(`Tasks/${task.Id}`, 'vertex.glsl');
     const fragmentBuffer = await amazonFileStorage.get(`Tasks/${task.Id}`, 'fragment.glsl');
+    const descriptionBuffer = await amazonFileStorage.get(`Tasks/${task.Id}`, 'description.md');
 
     return {
       id: task.Id,
       name: task.Name,
       vertexShader: vertexBuffer ? vertexBuffer.toString() : '',
       fragmentShader: fragmentBuffer ? fragmentBuffer.toString() : '',
+      description: descriptionBuffer ? descriptionBuffer.toString() : '',
       hints: [],
       restrictions: [],
       order: task.Order,
@@ -147,6 +151,7 @@ class TaskService {
 
     const taskVertexBuffer = await amazonFileStorage.get(`Tasks/${task.Id}`, 'vertex.glsl');
     const taskFragmentBuffer = await amazonFileStorage.get(`Tasks/${task.Id}`, 'fragment.glsl');
+    const taskDescriptionBuffer = await amazonFileStorage.get(`Tasks/${task.Id}`, 'description.md');
 
     const userVertexBuffer = await amazonFileStorage.get(`Users/${userId}/tasks/${task.Id}`, 'vertex.glsl');
     const userFragmentBuffer = await amazonFileStorage.get(`Users/${userId}/tasks/${task.Id}`, 'fragment.glsl');
@@ -157,6 +162,7 @@ class TaskService {
         name: task.Name,
         vertexShader: taskVertexBuffer ? taskVertexBuffer.toString() : null,
         fragmentShader: taskFragmentBuffer ? taskFragmentBuffer.toString() : null,
+        description: taskDescriptionBuffer ? taskDescriptionBuffer.toString() : '',
         hints: [],
         restrictions: [],
         order: task.Order,
