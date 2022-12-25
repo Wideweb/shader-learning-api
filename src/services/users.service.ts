@@ -16,6 +16,7 @@ class UserService {
       name: findUser.UserName,
       email: findUser.Email,
       roleId: findUser.Role_Id,
+      permissions: [],
     };
 
     return user;

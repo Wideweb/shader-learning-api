@@ -18,9 +18,10 @@ import { RequestWithUser } from '@interfaces/auth.interface';
 class TasksController {
   public create = async (req: RequestWithUser, res: Response, next: NextFunction) => {
     try {
+      const userData: User = req.user;
       const taskData: CreateTaskDto = req.body;
 
-      const id = await taskService.createTask(taskData);
+      const id = await taskService.createTask(taskData, userData.id);
       res.status(200).json(id);
     } catch (error) {
       next(error);
@@ -44,6 +45,40 @@ class TasksController {
       const task: TaskDto = await taskService.getTask(taskId);
 
       res.status(200).json(task);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public like = async (req: RequestWithUser, res: Response, next: NextFunction) => {
+    try {
+      const userData: User = req.user;
+      const taskId: number = parseInt(req.params.id);
+      const value: boolean = req.body.value;
+
+      const updated = await taskService.like(userData.id, taskId, value);
+
+      const likes = await taskService.getLikesNumber(taskId);
+      const dislikes = await taskService.getDislikesNumber(taskId);
+
+      res.status(200).json({ likes, dislikes, updated });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public dislike = async (req: RequestWithUser, res: Response, next: NextFunction) => {
+    try {
+      const userData: User = req.user;
+      const taskId: number = parseInt(req.params.id);
+      const value: boolean = req.body.value;
+
+      const updated = await taskService.dislike(userData.id, taskId, value);
+
+      const likes = await taskService.getLikesNumber(taskId);
+      const dislikes = await taskService.getDislikesNumber(taskId);
+
+      res.status(200).json({ likes, dislikes, updated });
     } catch (error) {
       next(error);
     }

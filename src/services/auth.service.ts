@@ -11,7 +11,7 @@ import { UserModel } from '@dataAccess/models/user.model';
 import { UserNameNotFoundExcrption } from '@exceptions/UserNameNotFoundException';
 import { PasswordMatchException } from '@exceptions/PasswordMatchException';
 import { EmailNotUniqueException } from '@exceptions/EmailNotUniqueException';
-import { UserNameNotUniqueException } from '@exceptions/UserNameNotUniqueException copy';
+import { UserNameNotUniqueException } from '@exceptions/UserNameNotUniqueException';
 
 class AuthService {
   public async signup(userData: CreateUserDto): Promise<{ tokenData: TokenData; user: User }> {
@@ -46,6 +46,7 @@ class AuthService {
       name: createdUser.UserName,
       email: createdUser.Email,
       roleId: createdUser.Role_Id,
+      permissions: this.getPermissions(createdUser.Role_Id),
     };
 
     return { tokenData, user };
@@ -66,6 +67,7 @@ class AuthService {
       name: findUser.UserName,
       email: findUser.Email,
       roleId: findUser.Role_Id,
+      permissions: this.getPermissions(findUser.Role_Id),
     };
 
     return { tokenData, user };
@@ -82,6 +84,7 @@ class AuthService {
       name: findUser.UserName,
       email: findUser.Email,
       roleId: findUser.Role_Id,
+      permissions: this.getPermissions(findUser.Role_Id),
     };
 
     return user;
@@ -97,6 +100,14 @@ class AuthService {
 
   public createCookie(tokenData: TokenData): string {
     return `Authorization=${tokenData.token}; HttpOnly; Max-Age=${tokenData.expiresIn};`;
+  }
+
+  public getPermissions(roleId: number): string[] {
+    if (roleId == 1) {
+      return ['task_view', 'task_submit', 'task_create', 'task_edit', 'task_visibility', 'task_delete', 'task_view_all', 'task_edit_all'];
+    }
+
+    return ['task_view', 'task_submit', 'task_create', 'task_edit'];
   }
 }
 

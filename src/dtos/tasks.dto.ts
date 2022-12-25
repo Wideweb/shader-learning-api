@@ -20,6 +20,14 @@ export class TaskDto {
   cost: number;
 
   threshold: number;
+
+  likes: number;
+
+  dislikes: number;
+
+  visibility: boolean;
+
+  createdBy: number;
 }
 
 export class CreateTaskDto {
@@ -112,6 +120,10 @@ export class UserTaskDto {
   vertexShader: string;
 
   fragmentShader: string;
+
+  liked: boolean;
+
+  disliked: boolean;
 }
 
 export class UserTaskResultDto {

@@ -52,6 +52,28 @@ export class TaskRepository {
     }
   }
 
+  public async getLikes(taskId: number): Promise<number> {
+    const result = await query<number>(`
+      SELECT COUNT (*)
+      FROM
+          [dbo].[UserTask]
+      WHERE
+          [dbo].[UserTask].[Liked] = 1 AND [dbo].[UserTask].[Task_Id] = ${taskId}
+    `);
+    return result.recordset[0][''] || 0;
+  }
+
+  public async getDislikes(taskId: number): Promise<number> {
+    const result = await query<number>(`
+      SELECT COUNT (*)
+      FROM
+          [dbo].[UserTask]
+      WHERE
+          [dbo].[UserTask].[Liked] = 0 AND [dbo].[UserTask].[Task_Id] = ${taskId}
+    `);
+    return result.recordset[0][''] || 0;
+  }
+
   public async getTaskList(): Promise<TaskListModel[]> {
     const result = await query<TaskListModel>(`
       SELECT TOP(100) [dbo].[Tasks].[Id], [dbo].[Tasks].[Name], [dbo].[Tasks].[Order], [dbo].[Tasks].[Threshold], [dbo].[Tasks].[Cost], [dbo].[Tasks].[Visibility]
@@ -81,6 +103,30 @@ export class TaskRepository {
             [Score] = ${task.Score}, [Accepted] = ${task.Accepted}, [Rejected] = ${task.Rejected}
           WHERE 
             [User_Id] = ${task.User_Id} AND [Task_Id] = ${task.Task_Id};
+      `);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  public async setLiked(userId: number, taskId: number, value: boolean | null): Promise<boolean> {
+    let liked: number | null = null;
+    if (value === true) {
+      liked = 1;
+    }
+
+    if (value === false) {
+      liked = 0;
+    }
+
+    try {
+      await query(`
+          UPDATE [dbo].[UserTask]
+          SET 
+            [Liked] = ${liked}
+          WHERE 
+            [User_Id] = ${userId} AND [Task_Id] = ${taskId};
       `);
       return true;
     } catch {

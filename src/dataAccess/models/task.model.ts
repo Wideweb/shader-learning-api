@@ -5,6 +5,7 @@ export interface TaskModel {
   Order: number;
   Cost: number;
   Visibility: 0 | 1;
+  CreatedBy: number;
 }
 
 export interface TaskListModel {
@@ -22,6 +23,7 @@ export interface UserTaskModel {
   Score: number;
   Accepted: 0 | 1;
   Rejected: 0 | 1;
+  Liked?: boolean | null;
 }
 
 export interface UserTaskResultModel {

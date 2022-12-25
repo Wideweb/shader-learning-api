@@ -20,7 +20,7 @@ import amazonFileStorage from './amazonFileStorage';
 import { TaskNameNotUniqueException } from '@/exceptions/TaskNameNotUniqueException';
 
 class TaskService {
-  public async createTask(task: CreateTaskDto): Promise<number> {
+  public async createTask(task: CreateTaskDto, userId: number): Promise<number> {
     const findTask = await taskRepository.findByName(task.name);
     if (findTask) throw new TaskNameNotUniqueException(task.name);
 
@@ -34,6 +34,7 @@ class TaskService {
       Order: order,
       Cost: task.cost,
       Visibility: task.visibility ? 0 : 1,
+      CreatedBy: userId,
     });
 
     if (taskId < 0) {
@@ -58,6 +59,7 @@ class TaskService {
       Order: task.order,
       Cost: task.cost,
       Visibility: task.visibility ? 0 : 1,
+      CreatedBy: findTask.CreatedBy,
     });
 
     if (!result) {
@@ -91,6 +93,9 @@ class TaskService {
       throw new HttpException(404, `Task with id=${id} doesn't exist`);
     }
 
+    const likes = await this.getLikesNumber(id);
+    const dislikes = await this.getDislikesNumber(id);
+
     const vertexBuffer = await amazonFileStorage.get(`Tasks/${task.Id}`, 'vertex.glsl');
     const fragmentBuffer = await amazonFileStorage.get(`Tasks/${task.Id}`, 'fragment.glsl');
     const descriptionBuffer = await amazonFileStorage.get(`Tasks/${task.Id}`, 'description.md');
@@ -106,6 +111,10 @@ class TaskService {
       order: task.Order,
       cost: task.Cost,
       threshold: task.Threshold,
+      likes,
+      dislikes,
+      visibility: task.Visibility == 1,
+      createdBy: task.CreatedBy,
     };
   }
 
@@ -146,32 +155,12 @@ class TaskService {
         task: null,
         vertexShader: '',
         fragmentShader: '',
+        liked: false,
+        disliked: false,
       };
     }
 
-    const taskVertexBuffer = await amazonFileStorage.get(`Tasks/${task.Id}`, 'vertex.glsl');
-    const taskFragmentBuffer = await amazonFileStorage.get(`Tasks/${task.Id}`, 'fragment.glsl');
-    const taskDescriptionBuffer = await amazonFileStorage.get(`Tasks/${task.Id}`, 'description.md');
-
-    const userVertexBuffer = await amazonFileStorage.get(`Users/${userId}/tasks/${task.Id}`, 'vertex.glsl');
-    const userFragmentBuffer = await amazonFileStorage.get(`Users/${userId}/tasks/${task.Id}`, 'fragment.glsl');
-
-    return {
-      task: {
-        id: task.Id,
-        name: task.Name,
-        vertexShader: taskVertexBuffer ? taskVertexBuffer.toString() : null,
-        fragmentShader: taskFragmentBuffer ? taskFragmentBuffer.toString() : null,
-        description: taskDescriptionBuffer ? taskDescriptionBuffer.toString() : '',
-        hints: [],
-        restrictions: [],
-        order: task.Order,
-        cost: task.Cost,
-        threshold: task.Threshold,
-      },
-      vertexShader: userVertexBuffer ? userVertexBuffer.toString() : null,
-      fragmentShader: userFragmentBuffer ? userFragmentBuffer.toString() : null,
-    };
+    return this.getTaskForUser(userId, task.Id);
   }
 
   public async getTaskForUser(userId: number, taskId: number): Promise<UserTaskDto> {
@@ -181,8 +170,12 @@ class TaskService {
         task: null,
         vertexShader: '',
         fragmentShader: '',
+        liked: false,
+        disliked: false,
       };
     }
+
+    const userTask: UserTaskModel = await taskRepository.findUserTask(userId, taskId);
 
     const vertexBuffer = await amazonFileStorage.get(`Users/${userId}/tasks/${taskId}`, 'vertex.glsl');
     const fragmentBuffer = await amazonFileStorage.get(`Users/${userId}/tasks/${taskId}`, 'fragment.glsl');
@@ -191,6 +184,8 @@ class TaskService {
       task,
       vertexShader: vertexBuffer ? vertexBuffer.toString() : null,
       fragmentShader: fragmentBuffer ? fragmentBuffer.toString() : null,
+      liked: userTask?.Liked === true,
+      disliked: userTask?.Liked === false,
     };
   }
 
@@ -286,6 +281,44 @@ class TaskService {
   public async getUserScore(userId: number): Promise<number> {
     const score: number = await taskRepository.getUserScore(userId);
     return score;
+  }
+
+  public async like(userId: number, taskId: number, value: boolean): Promise<boolean> {
+    const userTask = await taskRepository.findUserTask(userId, taskId);
+    if (!userTask) {
+      await taskRepository.createUserTask({
+        User_Id: userId,
+        Task_Id: taskId,
+        Score: 0,
+        Accepted: 0,
+        Rejected: 0,
+      });
+    }
+
+    return await taskRepository.setLiked(userId, taskId, value || null);
+  }
+
+  public async dislike(userId: number, taskId: number, value: boolean): Promise<boolean> {
+    const userTask = await taskRepository.findUserTask(userId, taskId);
+    if (!userTask) {
+      await taskRepository.createUserTask({
+        User_Id: userId,
+        Task_Id: taskId,
+        Score: 0,
+        Accepted: 0,
+        Rejected: 0,
+      });
+    }
+
+    return await taskRepository.setLiked(userId, taskId, value ? false : null);
+  }
+
+  public async getLikesNumber(taskId: number): Promise<number> {
+    return await taskRepository.getLikes(taskId);
+  }
+
+  public async getDislikesNumber(taskId: number): Promise<number> {
+    return await taskRepository.getDislikes(taskId);
   }
 }
 

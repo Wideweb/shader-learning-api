@@ -83,12 +83,18 @@ CREATE TABLE [dbo].[Tasks](
 	[VertexShader] [text] NULL,
 	[FragmentShader] [text] NULL,
 	[Visibility] [bit] DEFAULT 0,
+	[CreatedBy] [int] NOT NULL,
 )
 GO
 ALTER TABLE [dbo].[Tasks] ADD  CONSTRAINT [PK_dbo.Tasks] PRIMARY KEY CLUSTERED 
 (
 	[Id] ASC
 )WITH (STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+GO
+ALTER TABLE [dbo].[Tasks] WITH CHECK ADD CONSTRAINT [FK_dbo.Tasks.CreatedBy] FOREIGN KEY([CreatedBy])
+REFERENCES [dbo].[Users] ([Id])
+GO
+ALTER TABLE [dbo].[Tasks] CHECK CONSTRAINT [FK_dbo.Tasks.CreatedBy]
 GO
 
 /*
@@ -180,6 +186,7 @@ CREATE TABLE [dbo].[UserTask](
     [Score] [int] NOT NULL,
     [Accepted] [bit] DEFAULT 0,
     [Rejected] [bit] DEFAULT 0,
+	[Liked] [bit] DEFAULT NULL,
 	[VertexShader] [text] NULL,
 	[FragmentShader] [text] NULL
 )
