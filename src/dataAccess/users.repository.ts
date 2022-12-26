@@ -1,5 +1,5 @@
 import { query } from 'mssql';
-import { UserModel } from '@dataAccess/models/user.model';
+import { UserModel, UserProfileModel, UserRankedListModel } from '@dataAccess/models/user.model';
 
 export class UserRepository {
   public async findUserById(userId: number): Promise<UserModel> {
@@ -27,6 +27,39 @@ export class UserRepository {
     } catch {
       return false;
     }
+  }
+
+  public async getRankedList(): Promise<UserRankedListModel[]> {
+    const result = await query<UserRankedListModel>(`
+      SELECT TOP (1000) 
+        [dbo].[Users].[Id],
+        [dbo].[Users].[UserName],
+        SUM(ISNULL([dbo].[UserTask].[Score], 0)) AS Rank,
+        COUNT([dbo].[UserTask].[Task_Id]) AS Solved
+      FROM 
+        [dbo].[Users]
+      LEFT JOIN [dbo].[UserTask] ON [dbo].[Users].[Id] = [dbo].[UserTask].[User_Id] AND [dbo].[UserTask].[Accepted] = 1
+      GROUP BY [dbo].[Users].[Id], [dbo].[Users].[UserName]
+      ORDER BY Rank DESC
+    `);
+    return result.recordset;
+  }
+
+  public async findProfile(userId: number): Promise<UserProfileModel> {
+    const result = await query<UserProfileModel>(`
+      SELECT
+        [dbo].[Users].[Id],
+        [dbo].[Users].[UserName],
+        SUM(ISNULL([dbo].[UserTask].[Score], 0)) AS Rank,
+        COUNT([dbo].[UserTask].[Task_Id]) AS Solved
+      FROM 
+        [dbo].[Users]
+      LEFT JOIN [dbo].[UserTask] ON [dbo].[Users].[Id] = [dbo].[UserTask].[User_Id]  AND [dbo].[UserTask].[Accepted] = 1
+      WHERE [dbo].[Users].[Id] = ${userId}
+      GROUP BY [dbo].[Users].[Id], [dbo].[Users].[UserName]
+      ORDER BY Rank DESC
+    `);
+    return result.recordset[0];
   }
 }
 

@@ -1,17 +1,26 @@
 import { NextFunction, Request, Response } from 'express';
-import { CreateUserDto } from '@dtos/users.dto';
-import { User } from '@interfaces/users.interface';
 import userService from '@services/users.service';
 
 class UsersController {
-  // public getUsers = async (req: Request, res: Response, next: NextFunction) => {
-  //   try {
-  //     const findAllUsersData: User[] = await this.userService.findAllUser();
-  //     res.status(200).json({ data: findAllUsersData, message: 'findAll' });
-  //   } catch (error) {
-  //     next(error);
-  //   }
-  // };
+  public getRankedList = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const list = await userService.getRankedList();
+      res.status(200).json(list);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public getProfile = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const userId: number = parseInt(req.params.id);
+      const profile = await userService.getProfile(userId);
+      res.status(200).json(profile);
+    } catch (error) {
+      next(error);
+    }
+  };
+
   // public getUserById = async (req: Request, res: Response, next: NextFunction) => {
   //   try {
   //     const userId: string = req.params.id;

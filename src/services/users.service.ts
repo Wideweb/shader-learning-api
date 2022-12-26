@@ -3,6 +3,7 @@ import { User } from '@interfaces/users.interface';
 import { isEmpty } from '@utils/util';
 import { UserModel } from '@dataAccess/models/user.model';
 import userRepository from '@dataAccess/users.repository';
+import { UserProfileDto, UserRankedListDto } from '@/dtos/users.dto';
 
 class UserService {
   public async findUserById(userId: number): Promise<User> {
@@ -20,6 +21,27 @@ class UserService {
     };
 
     return user;
+  }
+
+  public async getRankedList(): Promise<UserRankedListDto[]> {
+    const list = await userRepository.getRankedList();
+    return list.map(user => ({
+      id: user.Id,
+      name: user.UserName,
+      rank: user.Rank,
+      solved: user.Solved,
+    }));
+  }
+
+  public async getProfile(userId: number): Promise<UserProfileDto> {
+    const profile = await userRepository.findProfile(userId);
+    if (!profile) throw new HttpException(409, `This userId ${userId} was not found`);
+    return {
+      id: profile.Id,
+      name: profile.UserName,
+      rank: profile.Rank,
+      solved: profile.Solved,
+    };
   }
 }
 

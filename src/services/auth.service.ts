@@ -104,10 +104,21 @@ class AuthService {
 
   public getPermissions(roleId: number): string[] {
     if (roleId == 1) {
-      return ['task_view', 'task_submit', 'task_create', 'task_edit', 'task_visibility', 'task_delete', 'task_view_all', 'task_edit_all'];
+      return [
+        'task_view',
+        'task_submit',
+        'task_create',
+        'task_edit',
+        'task_visibility',
+        'task_delete',
+        'task_view_all',
+        'task_edit_all',
+        'users-rating',
+        'view-profile',
+      ];
     }
 
-    return ['task_view', 'task_submit', 'task_create', 'task_edit'];
+    return ['task_view', 'task_submit', 'task_create', 'task_edit', 'users-rating', 'view-profile'];
   }
 }
 

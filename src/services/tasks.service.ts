@@ -18,6 +18,7 @@ import { logger } from '@utils/logger';
 import { User } from '@/interfaces/users.interface';
 import amazonFileStorage from './amazonFileStorage';
 import { TaskNameNotUniqueException } from '@/exceptions/TaskNameNotUniqueException';
+import userRepository from '@/dataAccess/users.repository';
 
 class TaskService {
   public async createTask(task: CreateTaskDto, userId: number): Promise<number> {
@@ -100,6 +101,8 @@ class TaskService {
     const fragmentBuffer = await amazonFileStorage.get(`Tasks/${task.Id}`, 'fragment.glsl');
     const descriptionBuffer = await amazonFileStorage.get(`Tasks/${task.Id}`, 'description.md');
 
+    const user = await userRepository.findUserById(task.CreatedBy);
+
     return {
       id: task.Id,
       name: task.Name,
@@ -114,7 +117,7 @@ class TaskService {
       likes,
       dislikes,
       visibility: task.Visibility == 1,
-      createdBy: task.CreatedBy,
+      createdBy: { id: user.Id, name: user.UserName },
     };
   }
 
@@ -151,13 +154,7 @@ class TaskService {
     }
 
     if (!task) {
-      return {
-        task: null,
-        vertexShader: '',
-        fragmentShader: '',
-        liked: false,
-        disliked: false,
-      };
+      return null;
     }
 
     return this.getTaskForUser(userId, task.Id);
@@ -166,13 +163,7 @@ class TaskService {
   public async getTaskForUser(userId: number, taskId: number): Promise<UserTaskDto> {
     const task: TaskDto = await this.getTask(taskId);
     if (!task) {
-      return {
-        task: null,
-        vertexShader: '',
-        fragmentShader: '',
-        liked: false,
-        disliked: false,
-      };
+      return null;
     }
 
     const userTask: UserTaskModel = await taskRepository.findUserTask(userId, taskId);
@@ -236,9 +227,12 @@ class TaskService {
     const score = taskSubmitData.match * task.cost;
     const match = taskSubmitData.match * 100;
     const accepted = match >= task.threshold;
-
     const result: TaskSubmitResultDto = { accepted, score, match };
-    await this.setTaskSubmitionResult(user.id, task.id, score, accepted, taskSubmitData.vertexShader, taskSubmitData.fragmentShader);
+
+    const userTask = await taskRepository.findUserTask(user.id, task.id);
+    if (!userTask || userTask.Score < score) {
+      await this.setTaskSubmitionResult(user.id, task.id, score, accepted, taskSubmitData.vertexShader, taskSubmitData.fragmentShader);
+    }
 
     return result;
   }

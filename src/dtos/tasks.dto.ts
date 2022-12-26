@@ -27,7 +27,7 @@ export class TaskDto {
 
   visibility: boolean;
 
-  createdBy: number;
+  createdBy: { id: number; name: string };
 }
 
 export class CreateTaskDto {
