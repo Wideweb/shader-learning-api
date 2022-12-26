@@ -224,7 +224,7 @@ class TaskService {
     if (isEmpty(taskSubmitData) || isEmpty(taskSubmitData.fragmentShader)) throw new HttpException(400, 'Task data is empty');
 
     const task = await this.getTask(taskSubmitData.id);
-    const score = taskSubmitData.match * task.cost;
+    const score = Math.round(taskSubmitData.match * task.cost);
     const match = taskSubmitData.match * 100;
     const accepted = match >= task.threshold;
     const result: TaskSubmitResultDto = { accepted, score, match };
