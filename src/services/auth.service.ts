@@ -111,6 +111,7 @@ class AuthService {
         'task_edit',
         'task_visibility',
         'task_delete',
+        'task_reorder',
         'task_view_all',
         'task_edit_all',
         'users-rating',

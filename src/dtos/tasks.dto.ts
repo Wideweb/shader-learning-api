@@ -67,6 +67,14 @@ export class UpdateTaskDto extends CreateTaskDto {
   id: number;
 }
 
+export class TaskReorderDto {
+  @IsNumber()
+  oldOrder: number;
+
+  @IsNumber()
+  newOrder: number;
+}
+
 export class TaskHintDto {
   message: string;
 

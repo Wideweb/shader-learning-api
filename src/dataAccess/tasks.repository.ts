@@ -134,6 +134,21 @@ export class TaskRepository {
     }
   }
 
+  public async rerder(oldOrder: number, newOrder: number): Promise<boolean> {
+    try {
+      await query(`
+        UPDATE [dbo].[Tasks]
+        SET [Order] = 
+          CASE [Order] WHEN ${oldOrder} THEN ${newOrder}
+          ELSE [Order] + SIGN(${oldOrder} - ${newOrder}) END
+        WHERE [Order] BETWEEN LEAST(${oldOrder}, ${newOrder}) AND GREATEST(${oldOrder}, ${newOrder});
+      `);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   public async findUserTask(userId: number, taskId: number): Promise<UserTaskModel> {
     const result = await query<UserTaskModel>(`
       SELECT TOP (1) *
@@ -167,6 +182,7 @@ export class TaskRepository {
       INNER JOIN [dbo].[Tasks] ON [dbo].[UserTask].[Task_Id] = [dbo].[Tasks].[Id]
       WHERE
           [dbo].[UserTask].[User_Id] = '${userId}' AND [dbo].[UserTask].[Accepted] = 0 AND [dbo].[Tasks].[Visibility] = 1
+      ORDER BY [dbo].[Tasks].[Order]
     `);
     return result.recordset[0];
   }
@@ -180,6 +196,7 @@ export class TaskRepository {
       LEFT JOIN [dbo].[UserTask] ON [dbo].[UserTask].[Task_Id] = [dbo].[Tasks].[Id] AND [dbo].[UserTask].[User_Id] = ${userId}
       WHERE
           [dbo].[UserTask].[Task_Id] IS NULL AND [dbo].[Tasks].[Visibility] = 1
+      ORDER BY [dbo].[Tasks].[Order]
     `);
     return result.recordset[0];
   }

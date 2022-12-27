@@ -307,6 +307,10 @@ class TaskService {
     return await taskRepository.setLiked(userId, taskId, value ? false : null);
   }
 
+  public async reorder(oldOrder: number, newOrder: number): Promise<boolean> {
+    return await taskRepository.rerder(oldOrder, newOrder);
+  }
+
   public async getLikesNumber(taskId: number): Promise<number> {
     return await taskRepository.getLikes(taskId);
   }
