@@ -37,13 +37,13 @@ class TasksRoute implements Routes {
 
     this.router.put(`${this.path}/:id/like`, hasAllPermissions(['task_submit']), this.tasksController.like);
 
-    this.router.put(`${this.path}/reorder`, hasAllPermissions(['task_submit']), this.tasksController.rerorder);
+    this.router.put(`${this.path}/:id/dislike`, hasAllPermissions(['task_submit']), this.tasksController.dislike);
 
     this.router.put(
-      `${this.path}/:id/dislike`,
+      `${this.path}/reorder`,
       hasAllPermissions(['task_reorder']),
       validationMiddleware(TaskReorderDto, 'body'),
-      this.tasksController.dislike,
+      this.tasksController.rerorder,
     );
 
     this.router.get(`${this.path}/:id/userTask`, hasAllPermissions(['task_view']), this.tasksController.getUserTask);
