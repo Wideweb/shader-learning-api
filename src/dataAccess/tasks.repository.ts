@@ -173,30 +173,20 @@ export class TaskRepository {
     return result.recordset;
   }
 
-  public async findNotAccepted(userId: number): Promise<TaskModel> {
-    const result = await query<TaskModel>(`
-      SELECT TOP (1)
-          [dbo].[Tasks].*
-      FROM
-          [dbo].[UserTask]
-      INNER JOIN [dbo].[Tasks] ON [dbo].[UserTask].[Task_Id] = [dbo].[Tasks].[Id]
-      WHERE
-          [dbo].[UserTask].[User_Id] = '${userId}' AND [dbo].[UserTask].[Accepted] = 0 AND [dbo].[Tasks].[Visibility] = 1
-      ORDER BY [dbo].[Tasks].[Order]
-    `);
-    return result.recordset[0];
-  }
-
   public async findNext(userId: number): Promise<TaskModel> {
     const result = await query<TaskModel>(`
-      SELECT TOP (1)
-          [dbo].[Tasks].*
-      FROM
-          [dbo].[Tasks]
-      LEFT JOIN [dbo].[UserTask] ON [dbo].[UserTask].[Task_Id] = [dbo].[Tasks].[Id] AND [dbo].[UserTask].[User_Id] = ${userId}
-      WHERE
-          [dbo].[UserTask].[Task_Id] IS NULL AND [dbo].[Tasks].[Visibility] = 1
-      ORDER BY [dbo].[Tasks].[Order]
+        SELECT
+            [dbo].[Tasks].*
+        FROM
+            [dbo].[Tasks]
+        LEFT JOIN [dbo].[UserTask] ON [dbo].[Tasks].[Id] = [dbo].[UserTask].[Task_Id]
+        WHERE
+            [dbo].[Tasks].[Visibility] = 1 AND 
+            (
+                ([dbo].[UserTask].[User_Id] IS NULL) OR
+                ([dbo].[UserTask].[User_Id] = ${userId} AND [dbo].[UserTask].[Accepted] = 0)
+            )
+        ORDER BY [dbo].[Tasks].[Order]
     `);
     return result.recordset[0];
   }

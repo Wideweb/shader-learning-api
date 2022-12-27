@@ -148,11 +148,7 @@ class TaskService {
   }
 
   public async getNextTaskForUser(userId: number): Promise<UserTaskDto> {
-    let task: TaskModel = await taskRepository.findNotAccepted(userId);
-    if (!task) {
-      task = await taskRepository.findNext(userId);
-    }
-
+    const task: TaskModel = await taskRepository.findNext(userId);
     if (!task) {
       return null;
     }
