@@ -1,5 +1,6 @@
 export interface TaskModel {
   Id: number;
+  Module_Id: number;
   Name: string;
   Threshold: number;
   Order: number;

@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { Routes } from '@interfaces/routes.interface';
 import validationMiddleware from '@middlewares/validation.middleware';
 import TasksController from '@controllers/task.controller';
-import { CreateTaskDto, TaskReorderDto, TaskSubmitDto, TaskSubmitWithValidationDto, UpdateTaskDto } from '@dtos/tasks.dto';
+import { CreateTaskDto, TaskSubmitDto, TaskSubmitWithValidationDto, UpdateTaskDto } from '@dtos/tasks.dto';
 import { hasAllPermissions } from '@/middlewares/auth.middleware';
 
 class TasksRoute implements Routes {
@@ -26,8 +26,6 @@ class TasksRoute implements Routes {
 
     this.router.get(`${this.path}/:id/toggleVisibility`, hasAllPermissions(['task_visibility']), this.tasksController.toggleVisibility);
 
-    this.router.get(`${this.path}/list`, hasAllPermissions(['task_view_all']), this.tasksController.list);
-
     this.router.put(
       `${this.path}/:id/update`,
       hasAllPermissions(['task_edit']),
@@ -38,13 +36,6 @@ class TasksRoute implements Routes {
     this.router.put(`${this.path}/:id/like`, hasAllPermissions(['task_submit']), this.tasksController.like);
 
     this.router.put(`${this.path}/:id/dislike`, hasAllPermissions(['task_submit']), this.tasksController.dislike);
-
-    this.router.put(
-      `${this.path}/reorder`,
-      hasAllPermissions(['task_reorder']),
-      validationMiddleware(TaskReorderDto, 'body'),
-      this.tasksController.rerorder,
-    );
 
     this.router.get(`${this.path}/:id/userTask`, hasAllPermissions(['task_view']), this.tasksController.getUserTask);
 

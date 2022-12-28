@@ -25,11 +25,12 @@ class TaskService {
     const findTask = await taskRepository.findByName(task.name);
     if (findTask) throw new TaskNameNotUniqueException(task.name);
 
-    let order = await taskRepository.getLastTaskOrder();
+    let order = await taskRepository.getLastTaskOrder(task.moduleId);
     order++;
 
     const taskId = await taskRepository.createTask({
       Id: -1,
+      Module_Id: task.moduleId,
       Name: task.name,
       Threshold: task.threshold,
       Order: order,
@@ -50,14 +51,19 @@ class TaskService {
   }
 
   public async updateTask(task: UpdateTaskDto): Promise<number> {
-    const findTask = await taskRepository.findByName(task.name);
+    let findTask = await taskRepository.findByName(task.name);
     if (findTask && findTask.Id != task.id) throw new TaskNameNotUniqueException(task.name);
+
+    if (!findTask || findTask.Id != task.id) {
+      findTask = await taskRepository.findById(task.id);
+    }
 
     const result = await taskRepository.updateTask({
       Id: task.id,
+      Module_Id: task.moduleId,
       Name: task.name,
       Threshold: task.threshold,
-      Order: task.order,
+      Order: findTask.Order,
       Cost: task.cost,
       Visibility: task.visibility ? 0 : 1,
       CreatedBy: findTask.CreatedBy,
@@ -119,6 +125,19 @@ class TaskService {
       visibility: task.Visibility == 1,
       createdBy: { id: user.Id, name: user.UserName },
     };
+  }
+
+  public async getModuleTaskList(moduleId: number): Promise<TaskListDto[]> {
+    const tasks = await taskRepository.getModuleTaskList(moduleId);
+
+    return tasks.map(task => ({
+      id: task.Id,
+      name: task.Name,
+      order: task.Order,
+      threshold: task.Threshold,
+      cost: task.Cost,
+      visibility: task.Visibility == 1,
+    }));
   }
 
   public async getTaskList(): Promise<TaskListDto[]> {
@@ -301,10 +320,6 @@ class TaskService {
     }
 
     return await taskRepository.setLiked(userId, taskId, value ? false : null);
-  }
-
-  public async reorder(oldOrder: number, newOrder: number): Promise<boolean> {
-    return await taskRepository.rerder(oldOrder, newOrder);
   }
 
   public async getLikesNumber(taskId: number): Promise<number> {

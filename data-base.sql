@@ -68,6 +68,33 @@ VALUES ('Admin', 'alckevich@live.con', '', '123456', 0, 1);
 GO
 
 /*
+MODULE
+*/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Modules](
+	[Id] [int] IDENTITY(1,1) NOT NULL,
+	[Name] [nvarchar](max) NOT NULL,
+    [Description] [nvarchar](max) NOT NULL,
+	[CreatedBy] [int] NOT NULL,
+	[Locked] [bit] DEFAULT 1,
+	[Order] [int] NOT NULL,
+)
+GO
+ALTER TABLE [dbo].[Modules] ADD  CONSTRAINT [PK_dbo.Modules] PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+GO
+ALTER TABLE [dbo].[Modules] WITH CHECK ADD CONSTRAINT [FK_dbo.Modules.CreatedBy] FOREIGN KEY([CreatedBy])
+REFERENCES [dbo].[Users] ([Id])
+GO
+ALTER TABLE [dbo].[Modules] CHECK CONSTRAINT [FK_dbo.Modules.CreatedBy]
+GO
+
+/*
 TASK
 */
 SET ANSI_NULLS ON
@@ -84,6 +111,7 @@ CREATE TABLE [dbo].[Tasks](
 	[FragmentShader] [text] NULL,
 	[Visibility] [bit] DEFAULT 0,
 	[CreatedBy] [int] NOT NULL,
+	[Module_Id] [int] NOT NULL,
 )
 GO
 ALTER TABLE [dbo].[Tasks] ADD  CONSTRAINT [PK_dbo.Tasks] PRIMARY KEY CLUSTERED 
@@ -91,6 +119,13 @@ ALTER TABLE [dbo].[Tasks] ADD  CONSTRAINT [PK_dbo.Tasks] PRIMARY KEY CLUSTERED
 	[Id] ASC
 )WITH (STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 GO
+
+ALTER TABLE [dbo].[Tasks] WITH CHECK ADD CONSTRAINT [FK_dbo.Tasks.Module_Id] FOREIGN KEY([Module_Id])
+REFERENCES [dbo].[Modules] ([Id])
+GO
+ALTER TABLE [dbo].[Tasks] CHECK CONSTRAINT [FK_dbo.Tasks.Module_Id]
+GO
+
 ALTER TABLE [dbo].[Tasks] WITH CHECK ADD CONSTRAINT [FK_dbo.Tasks.CreatedBy] FOREIGN KEY([CreatedBy])
 REFERENCES [dbo].[Users] ([Id])
 GO

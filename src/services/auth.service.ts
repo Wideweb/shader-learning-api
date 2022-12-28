@@ -116,10 +116,14 @@ class AuthService {
         'task_edit_all',
         'users-rating',
         'view-profile',
+        'module_create',
+        'module_view',
+        'module_view_all',
+        'module_edit',
       ];
     }
 
-    return ['task_view', 'task_submit', 'task_create', 'task_edit', 'users-rating', 'view-profile'];
+    return ['task_view', 'task_submit', 'users-rating', 'view-profile', 'module_view', 'module_view_all'];
   }
 }
 

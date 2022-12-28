@@ -3,6 +3,8 @@ import { IsArray, IsBoolean, IsNumber, IsString } from 'class-validator';
 export class TaskDto {
   id: number;
 
+  moduleId: number;
+
   name: string;
 
   vertexShader: string;
@@ -31,6 +33,9 @@ export class TaskDto {
 }
 
 export class CreateTaskDto {
+  @IsNumber()
+  moduleId: number;
+
   @IsString()
   name: string;
 
@@ -50,9 +55,6 @@ export class CreateTaskDto {
   restrictions: TaskRestrictionDto[];
 
   @IsNumber()
-  order: number;
-
-  @IsNumber()
   cost: number;
 
   @IsNumber()
@@ -65,14 +67,6 @@ export class CreateTaskDto {
 export class UpdateTaskDto extends CreateTaskDto {
   @IsNumber()
   id: number;
-}
-
-export class TaskReorderDto {
-  @IsNumber()
-  oldOrder: number;
-
-  @IsNumber()
-  newOrder: number;
 }
 
 export class TaskHintDto {

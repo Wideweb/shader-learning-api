@@ -13,16 +13,20 @@ export class TaskRepository {
     return result.recordset[0];
   }
 
-  public async getLastTaskOrder(): Promise<number> {
-    const result = await query<number>(`SELECT TOP 1 ([Order]) FROM [dbo].[Tasks] ORDER BY [Order] DESC`);
-    return result.recordset[0][''] || 0;
+  public async getLastTaskOrder(moduleId: number): Promise<number> {
+    const result = await query<number>(`
+      SELECT TOP 1 ([Order])
+      FROM [dbo].[Tasks]
+      WHERE [dbo].[Tasks].[Module_Id] = ${moduleId}
+      ORDER BY [Order] DESC`);
+    return result.recordset[0][''] || -1;
   }
 
   public async createTask(task: TaskModel): Promise<number> {
     try {
       const result = await query(`
-          INSERT INTO [dbo].[Tasks] ([Name], [Threshold], [Order], [Cost], [Visibility])
-          VALUES ('${task.Name}', ${task.Threshold}, ${task.Order}, ${task.Cost}, ${task.Visibility});
+          INSERT INTO [dbo].[Tasks] ([Name], [Threshold], [Order], [Cost], [Visibility], [Module_Id], [CreatedBy])
+          VALUES ('${task.Name}', ${task.Threshold}, ${task.Order}, ${task.Cost}, ${task.Visibility}, ${task.Module_Id}, ${task.CreatedBy});
           SELECT SCOPE_IDENTITY();
       `);
       return result.recordset[0][''];
@@ -72,6 +76,16 @@ export class TaskRepository {
           [dbo].[UserTask].[Liked] = 0 AND [dbo].[UserTask].[Task_Id] = ${taskId}
     `);
     return result.recordset[0][''] || 0;
+  }
+
+  public async getModuleTaskList(moduleId: number): Promise<TaskListModel[]> {
+    const result = await query<TaskListModel>(`
+      SELECT TOP(100) [dbo].[Tasks].[Id], [dbo].[Tasks].[Name], [dbo].[Tasks].[Order], [dbo].[Tasks].[Threshold], [dbo].[Tasks].[Cost], [dbo].[Tasks].[Visibility]
+      FROM [dbo].[Tasks]
+      WHERE [dbo].[Tasks].[Module_Id] = ${moduleId}
+      ORDER BY [dbo].[Tasks].[Order]
+    `);
+    return result.recordset;
   }
 
   public async getTaskList(): Promise<TaskListModel[]> {
@@ -127,21 +141,6 @@ export class TaskRepository {
             [Liked] = ${liked}
           WHERE 
             [User_Id] = ${userId} AND [Task_Id] = ${taskId};
-      `);
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
-  public async rerder(oldOrder: number, newOrder: number): Promise<boolean> {
-    try {
-      await query(`
-        UPDATE [dbo].[Tasks]
-        SET [Order] = 
-          CASE [Order] WHEN ${oldOrder} THEN ${newOrder}
-          ELSE [Order] + SIGN(${oldOrder} - ${newOrder}) END
-        WHERE [Order] BETWEEN LEAST(${oldOrder}, ${newOrder}) AND GREATEST(${oldOrder}, ${newOrder});
       `);
       return true;
     } catch {

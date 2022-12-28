@@ -104,18 +104,6 @@ class TasksController {
     }
   };
 
-  public rerorder = async (req: RequestWithUser, res: Response, next: NextFunction) => {
-    try {
-      const oldOrder: number = parseInt(req.body.oldOrder);
-      const newOrder: number = parseInt(req.body.newOrder);
-      const result = await taskService.reorder(oldOrder, newOrder);
-
-      res.status(200).json(result);
-    } catch (error) {
-      next(error);
-    }
-  };
-
   public getUserTask = async (req: RequestWithUser, res: Response, next: NextFunction) => {
     try {
       const userData: User = req.user;
