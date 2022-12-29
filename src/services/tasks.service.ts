@@ -261,10 +261,11 @@ class TaskService {
     const result: TaskSubmitResultDto = { accepted, score, match };
 
     const userTask = await taskRepository.findUserTask(user.id, task.id);
-    if (!userTask || userTask.Score < score) {
-      await this.setTaskSubmitionResult(user.id, task.id, score, accepted, taskSubmitData.vertexShader, taskSubmitData.fragmentShader);
+    if (userTask) {
+      result.score = Math.max(result.score, userTask.Score);
     }
 
+    await this.setTaskSubmitionResult(user.id, task.id, score, accepted, taskSubmitData.vertexShader, taskSubmitData.fragmentShader);
     return result;
   }
 

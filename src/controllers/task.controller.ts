@@ -117,17 +117,6 @@ class TasksController {
     }
   };
 
-  public getNext = async (req: RequestWithUser, res: Response, next: NextFunction) => {
-    try {
-      const userData: User = req.user;
-      const userTask: UserTaskDto = await taskService.getNextTaskForUser(userData.id);
-
-      res.status(200).json(userTask);
-    } catch (error) {
-      next(error);
-    }
-  };
-
   public getProgress = async (req: RequestWithUser, res: Response, next: NextFunction) => {
     try {
       const userData: User = req.user;

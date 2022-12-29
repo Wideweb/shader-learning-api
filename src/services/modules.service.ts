@@ -101,7 +101,6 @@ class ModulesService {
       acceptedTasks: module.AcceptedTasks,
       order: module.Order,
       locked: module.Locked == 1,
-      progress: 0,
     }));
   }
 

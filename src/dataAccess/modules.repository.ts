@@ -67,6 +67,7 @@ export class ModuleRepository {
           (
               SELECT [dbo].[Tasks].[Module_Id], Count([dbo].[Tasks].[Id]) as [Size]
               FROM [dbo].[Tasks]
+              WHERE [dbo].[Tasks].[Visibility] = 1
               GROUP BY [dbo].[Tasks].[Module_Id]
           ) [Module_Tasks] ON [dbo].[Modules].[Id] = [Module_Tasks].[Module_Id]
 
