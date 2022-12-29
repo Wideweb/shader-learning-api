@@ -140,13 +140,20 @@ export class UserTaskResultDto {
   rejected: boolean;
 
   score: number;
+
+  match: number;
 }
 
 export interface TaskListDto {
   id: number;
+
   name: string;
+
   order: number;
+
   threshold: number;
+
   cost: number;
+
   visibility: boolean;
 }

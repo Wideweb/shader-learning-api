@@ -41,6 +41,8 @@ class ModuleRoute implements Routes {
       validationMiddleware(ModuleTaskReorderDto, 'body'),
       this.controller.taskReorder,
     );
+
+    this.router.get(`${this.path}/:id/user/progress`, hasAllPermissions(['module_view', 'task_submit']), this.controller.userProgress);
   }
 }
 

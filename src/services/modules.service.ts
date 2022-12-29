@@ -1,6 +1,6 @@
 import { HttpException } from '@exceptions/HttpException';
 import userRepository from '@/dataAccess/users.repository';
-import { CreateModuleDto, ModuleDto, ModuleListDto, UpdateModuleDto } from '@/dtos/modules.dto';
+import { CreateModuleDto, ModuleDto, ModuleListDto, ModuleUserProgressDto, UpdateModuleDto } from '@/dtos/modules.dto';
 import moduleRepository from '@/dataAccess/modules.repository';
 import { ModuleNameNotUniqueException } from '@/exceptions/ModuleNameNotUniqueException';
 import { ModuleModel } from '@/dataAccess/models/module.model';
@@ -58,6 +58,26 @@ class ModulesService {
 
     const user = await userRepository.findUserById(module.CreatedBy);
     const tasks = await taskService.getModuleTaskList(id);
+
+    return {
+      id: module.Id,
+      name: module.Name,
+      description: module.Description,
+      order: module.Order,
+      createdBy: { id: user.Id, name: user.UserName },
+      locked: module.Locked == 1,
+      tasks,
+    };
+  }
+
+  public async getUserProgress(userId: number, moduleId: number): Promise<ModuleUserProgressDto> {
+    const module: ModuleModel = await moduleRepository.findById(moduleId);
+    if (module == null) {
+      throw new HttpException(404, `Module with id=${moduleId} doesn't exist`);
+    }
+
+    const user = await userRepository.findUserById(module.CreatedBy);
+    const tasks = await taskService.getUserModuleTaskResults(userId, moduleId);
 
     return {
       id: module.Id,

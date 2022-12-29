@@ -161,12 +161,32 @@ export class TaskRepository {
 
   public async getUserTaskResults(userId: number): Promise<UserTaskResultModel[]> {
     const result = await query<UserTaskResultModel>(`
-      SELECT [dbo].[Tasks].[Id], [dbo].[Tasks].[Name], [dbo].[Tasks].[Order], [dbo].[UserTask].[Score], [dbo].[UserTask].[Accepted], [dbo].[UserTask].[Rejected]
+      SELECT [dbo].[Tasks].[Id], [dbo].[Tasks].[Name], [dbo].[Tasks].[Order], [dbo].[Tasks].[Cost], [dbo].[UserTask].[Score], [dbo].[UserTask].[Accepted], [dbo].[UserTask].[Rejected]
       FROM
           [dbo].[UserTask]
       INNER JOIN [dbo].[Tasks] ON [dbo].[UserTask].[Task_Id] = [dbo].[Tasks].[Id]
       WHERE
           [dbo].[UserTask].[User_Id] = '${userId}'
+      ORDER BY [dbo].[Tasks].[Order]
+    `);
+    return result.recordset;
+  }
+
+  public async getUserModuleTaskResults(userId: number, moduleId: number): Promise<UserTaskResultModel[]> {
+    const result = await query<UserTaskResultModel>(`
+      SELECT 
+        [dbo].[Tasks].[Id],
+        [dbo].[Tasks].[Name],
+        [dbo].[Tasks].[Order],
+        [dbo].[Tasks].[Cost],
+        ISNULL([dbo].[UserTask].[Score], 0) AS Score,
+        ISNULL([dbo].[UserTask].[Accepted], 0) as Accepted,
+        ISNULL([dbo].[UserTask].[Rejected], 0) as Rejected
+      FROM
+          [dbo].[Tasks]
+      LEFT JOIN [dbo].[UserTask] ON [dbo].[Tasks].[Id] = [dbo].[UserTask].[Task_Id] AND [dbo].[UserTask].[User_Id] = ${userId}
+      WHERE
+          [dbo].[Tasks].[Module_Id] = ${moduleId} AND [dbo].[Tasks].[Visibility] = 1
       ORDER BY [dbo].[Tasks].[Order]
     `);
     return result.recordset;

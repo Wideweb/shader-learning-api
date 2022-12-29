@@ -111,6 +111,7 @@ class TaskService {
 
     return {
       id: task.Id,
+      moduleId: task.Module_Id,
       name: task.Name,
       vertexShader: vertexBuffer ? vertexBuffer.toString() : '',
       fragmentShader: fragmentBuffer ? fragmentBuffer.toString() : '',
@@ -140,6 +141,20 @@ class TaskService {
     }));
   }
 
+  public async getUserModuleTaskResults(userId: number, moduleId: number): Promise<UserTaskResultDto[]> {
+    const tasks = await taskRepository.getUserModuleTaskResults(userId, moduleId);
+
+    return tasks.map(task => ({
+      id: task.Id,
+      name: task.Name,
+      order: task.Order,
+      score: task.Score,
+      accepted: task.Accepted > 0,
+      rejected: task.Rejected > 0,
+      match: task.Score / task.Cost,
+    }));
+  }
+
   public async getTaskList(): Promise<TaskListDto[]> {
     const tasks = await taskRepository.getTaskList();
 
@@ -163,6 +178,7 @@ class TaskService {
       score: task.Score,
       accepted: task.Accepted > 0,
       rejected: task.Rejected > 0,
+      match: task.Score / task.Cost,
     }));
   }
 

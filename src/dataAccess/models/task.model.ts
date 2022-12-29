@@ -31,6 +31,7 @@ export interface UserTaskResultModel {
   Id: number;
   Name: string;
   Order: number;
+  Cost: number;
   Score: number;
   Accepted: 0 | 1;
   Rejected: 0 | 1;
