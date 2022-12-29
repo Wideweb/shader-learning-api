@@ -40,6 +40,7 @@ export interface ModuleListDto {
   name: string;
   description: string;
   tasks: number;
+  acceptedTasks: number;
   order: number;
   locked: boolean;
 }

@@ -52,9 +52,16 @@ export class ModuleRepository {
     }
   }
 
-  public async getModuleList(): Promise<ModuleListModel[]> {
+  public async getModuleList(userId: number): Promise<ModuleListModel[]> {
     const result = await query<ModuleListModel>(`
-      SELECT TOP(100) [dbo].[Modules].[Id], [dbo].[Modules].[Name], [dbo].[Modules].[Description], [dbo].[Modules].[Locked], [dbo].[Modules].[Order], [Module_Tasks].[Size] AS [Tasks]
+      SELECT TOP(100)
+        [dbo].[Modules].[Id],
+        [dbo].[Modules].[Name],
+        [dbo].[Modules].[Description],
+        [dbo].[Modules].[Locked],
+        [dbo].[Modules].[Order],
+        ISNULL([Module_Tasks].[Size], 0) AS [Tasks],
+        ISNULL([User_Tasks].[Size], 0) AS [AcceptedTasks]
       FROM [dbo].[Modules]
       LEFT JOIN 
           (
@@ -62,6 +69,16 @@ export class ModuleRepository {
               FROM [dbo].[Tasks]
               GROUP BY [dbo].[Tasks].[Module_Id]
           ) [Module_Tasks] ON [dbo].[Modules].[Id] = [Module_Tasks].[Module_Id]
+
+      LEFT JOIN 
+          (
+              SELECT [dbo].[Tasks].[Module_Id], Count([dbo].[UserTask].[User_Id]) as [Size]
+              FROM [dbo].[UserTask]
+              INNER JOIN [dbo].[Tasks] ON [dbo].[UserTask].[Task_Id] = [dbo].[Tasks].[Id]
+              WHERE [dbo].[UserTask].[User_Id] = ${userId} AND [dbo].[Tasks].[Visibility] = 1 AND [dbo].[UserTask].[Accepted] = 1
+              GROUP BY [dbo].[Tasks].[Module_Id]
+          ) [User_Tasks] ON [dbo].[Modules].[Id] = [User_Tasks].[Module_Id]
+
       ORDER BY [dbo].[Modules].[Order]
     `);
     return result.recordset;

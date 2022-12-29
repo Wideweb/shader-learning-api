@@ -14,4 +14,5 @@ export interface ModuleListModel {
   Order: number;
   Locked: 0 | 1;
   Tasks: number;
+  AcceptedTasks: number;
 }

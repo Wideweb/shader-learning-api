@@ -42,7 +42,8 @@ class ModuleController {
 
   public list = async (req: RequestWithUser, res: Response, next: NextFunction) => {
     try {
-      const results: ModuleListDto[] = await moduleService.getModuleList();
+      const userData: User = req.user;
+      const results: ModuleListDto[] = await moduleService.getModuleList(userData.id);
 
       res.status(200).json(results);
     } catch (error) {

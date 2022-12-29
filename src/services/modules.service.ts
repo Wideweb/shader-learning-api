@@ -90,16 +90,18 @@ class ModulesService {
     };
   }
 
-  public async getModuleList(): Promise<ModuleListDto[]> {
-    const modules = await moduleRepository.getModuleList();
+  public async getModuleList(userId: number): Promise<ModuleListDto[]> {
+    const modules = await moduleRepository.getModuleList(userId);
 
     return modules.map(module => ({
       id: module.Id,
       name: module.Name,
       description: module.Description,
       tasks: module.Tasks,
+      acceptedTasks: module.AcceptedTasks,
       order: module.Order,
       locked: module.Locked == 1,
+      progress: 0,
     }));
   }
 
