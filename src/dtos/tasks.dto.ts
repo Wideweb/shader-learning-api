@@ -131,6 +131,8 @@ export class UserTaskDto {
 export class UserTaskResultDto {
   id: number;
 
+  moduleId: number;
+
   name: string;
 
   order: number;
@@ -146,6 +148,8 @@ export class UserTaskResultDto {
 
 export interface TaskListDto {
   id: number;
+
+  moduleId: number;
 
   name: string;
 

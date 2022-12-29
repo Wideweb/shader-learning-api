@@ -90,7 +90,14 @@ export class TaskRepository {
 
   public async getTaskList(): Promise<TaskListModel[]> {
     const result = await query<TaskListModel>(`
-      SELECT TOP(100) [dbo].[Tasks].[Id], [dbo].[Tasks].[Name], [dbo].[Tasks].[Order], [dbo].[Tasks].[Threshold], [dbo].[Tasks].[Cost], [dbo].[Tasks].[Visibility]
+      SELECT TOP(100)
+        [dbo].[Tasks].[Id],
+        [dbo].[Tasks].[Name],
+        [dbo].[Tasks].[Order],
+        [dbo].[Tasks].[Threshold],
+        [dbo].[Tasks].[Cost],
+        [dbo].[Tasks].[Visibility],
+        [dbo].[Tasks].[Module_Id]
       FROM [dbo].[Tasks]
       ORDER BY [dbo].[Tasks].[Order]
     `);
@@ -161,7 +168,15 @@ export class TaskRepository {
 
   public async getUserTaskResults(userId: number): Promise<UserTaskResultModel[]> {
     const result = await query<UserTaskResultModel>(`
-      SELECT [dbo].[Tasks].[Id], [dbo].[Tasks].[Name], [dbo].[Tasks].[Order], [dbo].[Tasks].[Cost], [dbo].[UserTask].[Score], [dbo].[UserTask].[Accepted], [dbo].[UserTask].[Rejected]
+      SELECT
+        [dbo].[Tasks].[Id],
+        [dbo].[Tasks].[Module_Id],
+        [dbo].[Tasks].[Name],
+        [dbo].[Tasks].[Order],
+        [dbo].[Tasks].[Cost],
+        [dbo].[UserTask].[Score],
+        [dbo].[UserTask].[Accepted],
+        [dbo].[UserTask].[Rejected]
       FROM
           [dbo].[UserTask]
       INNER JOIN [dbo].[Tasks] ON [dbo].[UserTask].[Task_Id] = [dbo].[Tasks].[Id]
@@ -176,6 +191,7 @@ export class TaskRepository {
     const result = await query<UserTaskResultModel>(`
       SELECT 
         [dbo].[Tasks].[Id],
+        [dbo].[Tasks].[Module_Id],
         [dbo].[Tasks].[Name],
         [dbo].[Tasks].[Order],
         [dbo].[Tasks].[Cost],

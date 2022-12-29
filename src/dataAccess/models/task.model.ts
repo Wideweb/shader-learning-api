@@ -16,6 +16,7 @@ export interface TaskListModel {
   Threshold: number;
   Cost: number;
   Visibility: 0 | 1;
+  Module_Id: number;
 }
 
 export interface UserTaskModel {
@@ -29,6 +30,7 @@ export interface UserTaskModel {
 
 export interface UserTaskResultModel {
   Id: number;
+  Module_Id: number;
   Name: string;
   Order: number;
   Cost: number;

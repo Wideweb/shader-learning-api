@@ -133,6 +133,7 @@ class TaskService {
 
     return tasks.map(task => ({
       id: task.Id,
+      moduleId: task.Module_Id,
       name: task.Name,
       order: task.Order,
       threshold: task.Threshold,
@@ -146,6 +147,7 @@ class TaskService {
 
     return tasks.map(task => ({
       id: task.Id,
+      moduleId: task.Module_Id,
       name: task.Name,
       order: task.Order,
       score: task.Score,
@@ -160,6 +162,7 @@ class TaskService {
 
     return tasks.map(task => ({
       id: task.Id,
+      moduleId: task.Module_Id,
       name: task.Name,
       order: task.Order,
       threshold: task.Threshold,
@@ -173,6 +176,7 @@ class TaskService {
 
     return tasks.map(task => ({
       id: task.Id,
+      moduleId: task.Module_Id,
       name: task.Name,
       order: task.Order,
       score: task.Score,
