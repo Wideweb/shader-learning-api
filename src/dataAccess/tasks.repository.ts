@@ -19,7 +19,8 @@ export class TaskRepository {
       FROM [dbo].[Tasks]
       WHERE [dbo].[Tasks].[Module_Id] = ${moduleId}
       ORDER BY [Order] DESC`);
-    return result.recordset[0][''] || -1;
+    const order = Number.parseInt(result.recordset[0]['Order']);
+    return Number.isNaN(order) ? -1 : order;
   }
 
   public async createTask(task: TaskModel): Promise<number> {

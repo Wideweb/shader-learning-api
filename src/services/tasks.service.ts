@@ -65,7 +65,7 @@ class TaskService {
       Threshold: task.threshold,
       Order: findTask.Order,
       Cost: task.cost,
-      Visibility: task.visibility ? 0 : 1,
+      Visibility: task.visibility ? 1 : 0,
       CreatedBy: findTask.CreatedBy,
     });
 
