@@ -31,8 +31,12 @@ class ModulesService {
   }
 
   public async updateModule(module: UpdateModuleDto): Promise<number> {
-    const findModule = await moduleRepository.findByName(module.name);
+    let findModule = await moduleRepository.findByName(module.name);
     if (findModule && findModule.Id != module.id) throw new ModuleNameNotUniqueException(module.name);
+
+    if (!findModule || findModule.Id != module.id) {
+      findModule = await moduleRepository.findById(module.id);
+    }
 
     const result = await moduleRepository.updateModule({
       Id: module.id,
