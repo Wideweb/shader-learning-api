@@ -83,6 +83,11 @@ class AuthService {
     userRepository.setRefreshToken(findUser.Id, null);
   }
 
+  public async decodeAccessToken(accessToken: string): Promise<DataStoredInToken> {
+    const tokenData = (await verify(accessToken, ACCESS_TOKEN_SECRET)) as DataStoredInToken;
+    return tokenData;
+  }
+
   public async refreshAccessToken(refreshToken: string): Promise<{ token: string; expiresIn: number }> {
     const verificationResponse = (await verify(refreshToken, REFRESH_TOKEN_SECRET)) as DataStoredInToken;
     const userId = verificationResponse.id;

@@ -1,8 +1,6 @@
 import { NextFunction, Response } from 'express';
-import { verify } from 'jsonwebtoken';
-import { SECRET_KEY } from '@config';
 import { HttpException } from '@exceptions/HttpException';
-import { DataStoredInToken, RequestWithUser } from '@interfaces/auth.interface';
+import { RequestWithUser } from '@interfaces/auth.interface';
 import userService from '@services/users.service';
 import authService from '@/services/auth.service';
 
@@ -14,10 +12,8 @@ const permissionMiddleware = (prmissions: string[], all: boolean) => async (req:
       next(new HttpException(404, 'Authentication token missing'));
     }
 
-    const secretKey: string = SECRET_KEY;
-    const verificationResponse = (await verify(Authorization, secretKey)) as DataStoredInToken;
-    const userId = verificationResponse.id;
-    const findUser = await userService.findUserById(userId);
+    const tokenData = authService.decodeAccessToken(Authorization);
+    const findUser = await userService.findUserById((await tokenData).id);
 
     if (!findUser) {
       next(new HttpException(401, 'Wrong authentication token'));
