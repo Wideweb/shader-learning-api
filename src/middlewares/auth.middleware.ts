@@ -9,7 +9,7 @@ const permissionMiddleware = (prmissions: string[], all: boolean) => async (req:
     const Authorization = req.cookies['Authorization'] || (req.header('Authorization') ? req.header('Authorization').split('Bearer ')[1] : null);
 
     if (!Authorization) {
-      next(new HttpException(404, 'Authentication token missing'));
+      next(new HttpException(403, 'Authentication token missing'));
     }
 
     const tokenData = authService.decodeAccessToken(Authorization);
