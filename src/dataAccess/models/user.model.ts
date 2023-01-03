@@ -6,6 +6,7 @@ export interface UserModel {
   PasswordSalt: string;
   FailedLoginAttemptsCount: number;
   Role_Id: number;
+  RefreshToken: string;
 }
 
 export interface UserRankedListModel {

@@ -5,9 +5,15 @@ export interface DataStoredInToken {
   id: number;
 }
 
+export interface DataStoredInRefreshToken {
+  id: number;
+}
+
 export interface TokenData {
-  token: string;
-  expiresIn: number;
+  accessToken: string;
+  accessTokenLife: number;
+  refreshToken: string;
+  refreshTokenLife: number;
 }
 
 export interface RequestWithUser extends Request {

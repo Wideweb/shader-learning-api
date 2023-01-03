@@ -1,9 +1,9 @@
 import { genSalt, hash, compare } from 'bcrypt';
-import { sign } from 'jsonwebtoken';
-import { SECRET_KEY } from '@config';
+import { sign, verify } from 'jsonwebtoken';
+import { ACCESS_TOKEN_SECRET, ACCESS_TOKEN_LIFE, REFRESH_TOKEN_SECRET, REFRESH_TOKEN_LIFE } from '@config';
 import { CreateUserDto, LoginUserDto } from '@dtos/users.dto';
 import { HttpException } from '@exceptions/HttpException';
-import { DataStoredInToken, TokenData } from '@interfaces/auth.interface';
+import { DataStoredInRefreshToken, DataStoredInToken, TokenData } from '@interfaces/auth.interface';
 import { User } from '@interfaces/users.interface';
 import { isEmpty } from '@utils/util';
 import userRepository from '@dataAccess/users.repository';
@@ -33,6 +33,7 @@ class AuthService {
       PasswordSalt: passwordSalt,
       FailedLoginAttemptsCount: 0,
       Role_Id: 2,
+      RefreshToken: null,
     });
 
     if (!isUserCreated) throw new HttpException(500, `User is not created`);
@@ -73,33 +74,66 @@ class AuthService {
     return { tokenData, user };
   }
 
-  public async logout(userData: User): Promise<User> {
+  public async logout(userData: User): Promise<void> {
     if (isEmpty(userData)) throw new HttpException(400, 'userData is empty');
 
     const findUser: UserModel = await userRepository.findUserByName(userData.name);
     if (!findUser) throw new UserNameNotFoundExcrption(userData.name);
 
-    const user: User = {
-      id: findUser.Id,
-      name: findUser.UserName,
-      email: findUser.Email,
-      roleId: findUser.Role_Id,
-      permissions: this.getPermissions(findUser.Role_Id),
+    userRepository.setRefreshToken(findUser.Id, null);
+  }
+
+  public async refreshAccessToken(refreshToken: string): Promise<{ token: string; expiresIn: number }> {
+    const verificationResponse = (await verify(refreshToken, REFRESH_TOKEN_SECRET)) as DataStoredInToken;
+    const userId = verificationResponse.id;
+    const findUser = await userRepository.findUserById(userId);
+
+    if (isEmpty(findUser) || findUser.RefreshToken != refreshToken) {
+      throw new HttpException(400, 'invalid refreshToken');
+    }
+
+    const accessToken = this.createAccessToken(findUser);
+    return accessToken;
+  }
+
+  private createToken(user: UserModel): TokenData {
+    const accessToken = this.createAccessToken(user);
+    const refreshToken = this.createRefreshToken(user);
+
+    userRepository.setRefreshToken(user.Id, refreshToken.token);
+
+    return {
+      accessToken: accessToken.token,
+      accessTokenLife: accessToken.expiresIn,
+      refreshToken: refreshToken.token,
+      refreshTokenLife: refreshToken.expiresIn,
     };
-
-    return user;
   }
 
-  public createToken(user: UserModel): TokenData {
-    const dataStoredInToken: DataStoredInToken = { id: user.Id };
-    const secretKey: string = SECRET_KEY;
-    const expiresIn: number = 60 * 60;
+  private createAccessToken(user: UserModel): { token: string; expiresIn: number } {
+    const storedData: DataStoredInToken = { id: user.Id };
+    const secret: string = ACCESS_TOKEN_SECRET;
+    const expiresIn = Number.parseInt(ACCESS_TOKEN_LIFE);
 
-    return { expiresIn, token: sign(dataStoredInToken, secretKey, { expiresIn }) };
+    return {
+      token: sign(storedData, secret, { expiresIn }),
+      expiresIn,
+    };
   }
 
-  public createCookie(tokenData: TokenData): string {
-    return `Authorization=${tokenData.token}; HttpOnly; Max-Age=${tokenData.expiresIn};`;
+  private createRefreshToken(user: UserModel): { token: string; expiresIn: number } {
+    const storedData: DataStoredInRefreshToken = { id: user.Id };
+    const secret: string = REFRESH_TOKEN_SECRET;
+    const expiresIn = Number.parseInt(REFRESH_TOKEN_LIFE);
+
+    return {
+      token: sign(storedData, secret, expiresIn > 0 ? { expiresIn } : null),
+      expiresIn,
+    };
+  }
+
+  public createCookie(token: string, expiresIn: number): string {
+    return `Authorization=${token}; HttpOnly; Max-Age=${expiresIn};`;
   }
 
   public getPermissions(roleId: number): string[] {

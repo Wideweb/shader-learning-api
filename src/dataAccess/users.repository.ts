@@ -29,6 +29,21 @@ export class UserRepository {
     }
   }
 
+  public async setRefreshToken(userId: number, token: string): Promise<boolean> {
+    try {
+      await query(`
+          UPDATE [dbo].[Users]
+          SET 
+            [RefreshToken] = '${token}'
+          WHERE 
+            [Id] = ${userId}
+      `);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   public async getRankedList(): Promise<UserRankedListModel[]> {
     const result = await query<UserRankedListModel>(`
       SELECT TOP (1000) 

@@ -41,7 +41,8 @@ CREATE TABLE [dbo].[Users](
 	[PasswordSalt] [nvarchar](max) NOT NULL,
 	[Password] [nvarchar](max) NOT NULL,
 	[FailedLoginAttemptsCount] [int] NOT NULL,
-	[Role_Id] [int] NOT NULL
+	[Role_Id] [int] NOT NULL,
+	[RefreshToken] [nvarchar](max) NULL
 )
 GO
 ALTER TABLE [dbo].[Users] ADD  CONSTRAINT [PK_dbo.Users] PRIMARY KEY CLUSTERED 
