@@ -27,6 +27,16 @@ export class UpdateModuleDto extends CreateModuleDto {
   id: number;
 }
 
+export class UpdateModuleNameDto {
+  @IsString()
+  name: string;
+}
+
+export class UpdateModuleDescriptionDto {
+  @IsString()
+  description: string;
+}
+
 export class ModuleTaskReorderDto {
   @IsNumber()
   oldOrder: number;

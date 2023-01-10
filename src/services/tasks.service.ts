@@ -35,7 +35,7 @@ class TaskService {
       Threshold: task.threshold,
       Order: order,
       Cost: task.cost,
-      Visibility: task.visibility ? 0 : 1,
+      Visibility: task.visibility ? 1 : 0,
       CreatedBy: userId,
     });
 
@@ -247,8 +247,8 @@ class TaskService {
 
     const matchDegree = matches / (256 * 256);
     const score = matchDegree * task.cost;
-    const match = matchDegree * 100;
-    const accepted = match >= task.threshold;
+    const match = matchDegree;
+    const accepted = match * 100 >= task.threshold;
 
     const result: TaskSubmitResultDto = { accepted, score, match };
     await this.setTaskSubmitionResult(userId, task.id, score, accepted, taskSubmitData.vertexShader, taskSubmitData.fragmentShader);
@@ -259,17 +259,25 @@ class TaskService {
     if (isEmpty(taskSubmitData) || isEmpty(taskSubmitData.fragmentShader)) throw new HttpException(400, 'Task data is empty');
 
     const task = await this.getTask(taskSubmitData.id);
-    const score = Math.round(taskSubmitData.match * task.cost);
-    const match = taskSubmitData.match * 100;
-    const accepted = match >= task.threshold;
+    let score = Math.round(taskSubmitData.match * task.cost);
+    const match = taskSubmitData.match;
+    const accepted = match * 100 >= task.threshold;
     const result: TaskSubmitResultDto = { accepted, score, match };
 
     const userTask = await taskRepository.findUserTask(user.id, task.id);
     if (userTask) {
-      result.score = Math.max(result.score, userTask.Score);
+      score = Math.max(result.score, userTask.Score);
     }
 
-    await this.setTaskSubmitionResult(user.id, task.id, score, accepted, taskSubmitData.vertexShader, taskSubmitData.fragmentShader);
+    await this.setTaskSubmitionResult(
+      user.id,
+      task.id,
+      score,
+      accepted || (!!userTask && userTask.Accepted == 1),
+      taskSubmitData.vertexShader,
+      taskSubmitData.fragmentShader,
+    );
+
     return result;
   }
 

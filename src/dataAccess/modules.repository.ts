@@ -1,31 +1,31 @@
 import { logger } from '@/utils/logger';
-import { query } from 'mssql';
+import dbConnection from './db-connection';
 import { ModuleListModel, ModuleModel } from './models/module.model';
 
 export class ModuleRepository {
   public async findById(id: number): Promise<ModuleModel> {
-    const result = await query<ModuleModel>(`SELECT TOP (1) * FROM [dbo].[Modules] WHERE [Id] = ${id}`);
-    return result.recordset[0];
+    const result = await dbConnection.query<ModuleModel>(`SELECT * FROM Modules WHERE Id = ${id} LIMIT 1`);
+    return result[0];
   }
 
   public async findByName(name: string): Promise<ModuleModel> {
-    const result = await query<ModuleModel>(`SELECT TOP (1) * FROM [dbo].[Modules] WHERE [Name] = '${name}'`);
-    return result.recordset[0];
+    const result = await dbConnection.query<ModuleModel>(`SELECT * FROM Modules WHERE Name = '${name}' LIMIT 1`);
+    return result[0];
   }
 
   public async getLastModuleOrder(): Promise<number> {
-    const result = await query<number>(`SELECT TOP 1 ([Order]) FROM [dbo].[Modules] ORDER BY [Order] DESC`);
-    return result.recordset[0][''] || -1;
+    const result = await dbConnection.query<number>(`SELECT Modules.Order as 'Order' FROM Modules ORDER BY Modules.Order DESC LIMIT 1`);
+    return result[0]['Order'] || -1;
   }
 
   public async createModule(module: ModuleModel): Promise<number> {
     try {
-      const result = await query(`
-        INSERT INTO [dbo].[Modules] ([Name], [Description], [CreatedBy], [Locked], [Order])
-        VALUES ('${module.Name}', '${module.Description}', ${module.CreatedBy}, ${module.Locked}, ${module.Order});
-        SELECT SCOPE_IDENTITY();
+      const result = await dbConnection.query(`
+        INSERT INTO Modules (Name, Description, CreatedBy, Locked, \`Order\`)
+        VALUES ('${module.Name}', '${module.Description}', ${module.CreatedBy}, ${module.Locked ? 1 : 0}, ${module.Order});
+        SELECT SCOPE_IDENTITY() as 'Id';
       `);
-      return result.recordset[0][''];
+      return result[0]['Id'];
     } catch (err) {
       logger.error(
         `DB: Failed to create module | Name:${module.Name}, Description:${module.Description}, CreatedBy:${module.CreatedBy}, Locked:${module.Locked}, Order:${module.Order}, error:${err.message}`,
@@ -36,12 +36,12 @@ export class ModuleRepository {
 
   public async updateModule(module: ModuleModel): Promise<boolean> {
     try {
-      await query(`
-        UPDATE [dbo].[Modules]
+      await dbConnection.query(`
+        UPDATE Modules
         SET 
-          [Name] = '${module.Name}', [Description] = '${module.Description}', [Locked] = ${module.Locked}, [Order] = ${module.Order}
+          Name = '${module.Name}', Description = '${module.Description}', Locked = ${module.Locked ? 1 : 0}, \`Order\` = ${module.Order}
         WHERE 
-          [Id] = ${module.Id};
+          Id = ${module.Id};
       `);
       return true;
     } catch (err) {
@@ -53,46 +53,47 @@ export class ModuleRepository {
   }
 
   public async getModuleList(userId: number): Promise<ModuleListModel[]> {
-    const result = await query<ModuleListModel>(`
-      SELECT TOP(100)
-        [dbo].[Modules].[Id],
-        [dbo].[Modules].[Name],
-        [dbo].[Modules].[Description],
-        [dbo].[Modules].[Locked],
-        [dbo].[Modules].[Order],
-        ISNULL([Module_Tasks].[Size], 0) AS [Tasks],
-        ISNULL([User_Tasks].[Size], 0) AS [AcceptedTasks]
-      FROM [dbo].[Modules]
+    const result = await dbConnection.query<ModuleListModel>(`
+      SELECT
+        Modules.Id,
+        Modules.Name,
+        Modules.Description,
+        Modules.Locked,
+        Modules.Order,
+        IFNULL(Module_Tasks.Size, 0) AS Tasks,
+        IFNULL(User_Tasks.Size, 0) AS AcceptedTasks
+      FROM Modules
       LEFT JOIN 
           (
-              SELECT [dbo].[Tasks].[Module_Id], Count([dbo].[Tasks].[Id]) as [Size]
-              FROM [dbo].[Tasks]
-              WHERE [dbo].[Tasks].[Visibility] = 1
-              GROUP BY [dbo].[Tasks].[Module_Id]
-          ) [Module_Tasks] ON [dbo].[Modules].[Id] = [Module_Tasks].[Module_Id]
+              SELECT Tasks.Module_Id, Count(Tasks.Id) as Size
+              FROM Tasks
+              WHERE Tasks.Visibility = 1
+              GROUP BY Tasks.Module_Id
+          ) Module_Tasks ON Modules.Id = Module_Tasks.Module_Id
 
       LEFT JOIN 
           (
-              SELECT [dbo].[Tasks].[Module_Id], Count([dbo].[UserTask].[User_Id]) as [Size]
-              FROM [dbo].[UserTask]
-              INNER JOIN [dbo].[Tasks] ON [dbo].[UserTask].[Task_Id] = [dbo].[Tasks].[Id]
-              WHERE [dbo].[UserTask].[User_Id] = ${userId} AND [dbo].[Tasks].[Visibility] = 1 AND [dbo].[UserTask].[Accepted] = 1
-              GROUP BY [dbo].[Tasks].[Module_Id]
-          ) [User_Tasks] ON [dbo].[Modules].[Id] = [User_Tasks].[Module_Id]
+              SELECT Tasks.Module_Id, Count(UserTask.User_Id) as Size
+              FROM UserTask
+              INNER JOIN Tasks ON UserTask.Task_Id = Tasks.Id
+              WHERE UserTask.User_Id = ${userId} AND Tasks.Visibility = 1 AND UserTask.Accepted = 1
+              GROUP BY Tasks.Module_Id
+          ) User_Tasks ON Modules.Id = User_Tasks.Module_Id
 
-      ORDER BY [dbo].[Modules].[Order]
+      ORDER BY Modules.Order
+      LIMIT 100
     `);
-    return result.recordset;
+    return result;
   }
 
   public async rerderTasks(moduleId: number, oldOrder: number, newOrder: number): Promise<boolean> {
     try {
-      await query(`
-        UPDATE [dbo].[Tasks]
-        SET [Order] = 
-          CASE [Order] WHEN ${oldOrder} THEN ${newOrder}
-          ELSE [Order] + SIGN(${oldOrder} - ${newOrder}) END
-        WHERE [Module_Id] = ${moduleId} AND [Order] BETWEEN LEAST(${oldOrder}, ${newOrder}) AND GREATEST(${oldOrder}, ${newOrder});
+      await dbConnection.query(`
+        UPDATE Tasks
+        SET Order = 
+          CASE Order WHEN ${oldOrder} THEN ${newOrder}
+          ELSE Order + SIGN(${oldOrder} - ${newOrder}) END
+        WHERE Module_Id = ${moduleId} AND Order BETWEEN LEAST(${oldOrder}, ${newOrder}) AND GREATEST(${oldOrder}, ${newOrder});
       `);
       return true;
     } catch {

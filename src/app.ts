@@ -8,11 +8,10 @@ import morgan from 'morgan';
 import swaggerJSDoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
 import { NODE_ENV, PORT, LOG_FORMAT, ORIGIN, CREDENTIALS } from '@config';
-import { dbConnection } from '@databases';
 import { Routes } from '@interfaces/routes.interface';
 import errorMiddleware from '@middlewares/error.middleware';
 import { logger, stream } from '@utils/logger';
-import { connect } from 'mssql';
+import dbConnection from './dataAccess/db-connection';
 
 class App {
   public app: express.Application;
@@ -45,7 +44,7 @@ class App {
   }
 
   private connectToDatabase() {
-    connect(dbConnection);
+    dbConnection.connect();
   }
 
   private initializeMiddlewares() {
@@ -83,6 +82,10 @@ class App {
 
   private initializeErrorHandling() {
     this.app.use(errorMiddleware);
+  }
+
+  public free() {
+    dbConnection.disconnect();
   }
 }
 

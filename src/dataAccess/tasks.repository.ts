@@ -1,36 +1,38 @@
 import { logger } from '@/utils/logger';
-import { query } from 'mssql';
+import dbConnection from './db-connection';
 import { TaskListModel, TaskModel, UserTaskModel, UserTaskResultModel } from './models/task.model';
 
 export class TaskRepository {
   public async findById(id: number): Promise<TaskModel> {
-    const result = await query<TaskModel>(`SELECT TOP (1) * FROM [dbo].[Tasks] WHERE [Id] = ${id}`);
-    return result.recordset[0];
+    const result = await dbConnection.query<TaskModel>(`SELECT * FROM Tasks WHERE Id = ${id} LIMIT 1`);
+    return result[0];
   }
 
   public async findByName(name: string): Promise<TaskModel> {
-    const result = await query<TaskModel>(`SELECT TOP (1) * FROM [dbo].[Tasks] WHERE [Name] = '${name}'`);
-    return result.recordset[0];
+    const result = await dbConnection.query<TaskModel>(`SELECT * FROM Tasks WHERE Name = '${name}' LIMIT 1`);
+    return result[0];
   }
 
   public async getLastTaskOrder(moduleId: number): Promise<number> {
-    const result = await query<number>(`
-      SELECT TOP 1 ([Order])
-      FROM [dbo].[Tasks]
-      WHERE [dbo].[Tasks].[Module_Id] = ${moduleId}
-      ORDER BY [Order] DESC`);
-    const order = Number.parseInt(result.recordset[0]['Order']);
+    const result = await dbConnection.query<number>(`
+      SELECT Tasks.Order
+      FROM Tasks
+      WHERE Tasks.Module_Id = ${moduleId}
+      ORDER BY Tasks.Order DESC
+      LIMIT 1
+    `);
+    const order = Number.parseInt(result[0] ? result[0]['Order'] : -1);
     return Number.isNaN(order) ? -1 : order;
   }
 
   public async createTask(task: TaskModel): Promise<number> {
     try {
-      const result = await query(`
-          INSERT INTO [dbo].[Tasks] ([Name], [Threshold], [Order], [Cost], [Visibility], [Module_Id], [CreatedBy])
+      const result = await dbConnection.query(`
+          INSERT INTO Tasks (Name, Threshold, \`Order\`, Cost, Visibility, Module_Id, CreatedBy)
           VALUES ('${task.Name}', ${task.Threshold}, ${task.Order}, ${task.Cost}, ${task.Visibility}, ${task.Module_Id}, ${task.CreatedBy});
-          SELECT SCOPE_IDENTITY();
+          SELECT LAST_INSERT_ID() as 'Id';
       `);
-      return result.recordset[0][''];
+      return result[0]['Id'];
     } catch (err) {
       logger.error(
         `DB: Failed to create task | Name:${task.Name}, Threshold:${task.Threshold}, Order:${task.Order}, Cost:${task.Cost}, error:${err.message}`,
@@ -41,12 +43,12 @@ export class TaskRepository {
 
   public async updateTask(task: TaskModel): Promise<boolean> {
     try {
-      await query(`
-        UPDATE [dbo].[Tasks]
+      await dbConnection.query(`
+        UPDATE Tasks
         SET 
-          [Name] = '${task.Name}', [Threshold] = ${task.Threshold}, [Order] = ${task.Order}, [Cost] = ${task.Cost}, [Visibility] = ${task.Visibility}
+          Name = '${task.Name}', Threshold = ${task.Threshold}, \`Order\` = ${task.Order}, Cost = ${task.Cost}, Visibility = ${task.Visibility}
         WHERE 
-          [Id] = ${task.Id};
+          Id = ${task.Id};
       `);
       return true;
     } catch (err) {
@@ -58,57 +60,59 @@ export class TaskRepository {
   }
 
   public async getLikes(taskId: number): Promise<number> {
-    const result = await query<number>(`
-      SELECT COUNT (*)
+    const result = await dbConnection.query<number>(`
+      SELECT COUNT (*) as 'Count'
       FROM
-          [dbo].[UserTask]
+          UserTask
       WHERE
-          [dbo].[UserTask].[Liked] = 1 AND [dbo].[UserTask].[Task_Id] = ${taskId}
+          UserTask.Liked = 1 AND UserTask.Task_Id = ${taskId}
     `);
-    return result.recordset[0][''] || 0;
+    return result[0]['Count'] || 0;
   }
 
   public async getDislikes(taskId: number): Promise<number> {
-    const result = await query<number>(`
-      SELECT COUNT (*)
+    const result = await dbConnection.query<number>(`
+      SELECT COUNT (*) as 'Count'
       FROM
-          [dbo].[UserTask]
+          UserTask
       WHERE
-          [dbo].[UserTask].[Liked] = 0 AND [dbo].[UserTask].[Task_Id] = ${taskId}
+          UserTask.Liked = 0 AND UserTask.Task_Id = ${taskId}
     `);
-    return result.recordset[0][''] || 0;
+    return result[0]['Count'] || 0;
   }
 
   public async getModuleTaskList(moduleId: number): Promise<TaskListModel[]> {
-    const result = await query<TaskListModel>(`
-      SELECT TOP(100) [dbo].[Tasks].[Id], [dbo].[Tasks].[Name], [dbo].[Tasks].[Order], [dbo].[Tasks].[Threshold], [dbo].[Tasks].[Cost], [dbo].[Tasks].[Visibility]
-      FROM [dbo].[Tasks]
-      WHERE [dbo].[Tasks].[Module_Id] = ${moduleId}
-      ORDER BY [dbo].[Tasks].[Order]
+    const result = await dbConnection.query<TaskListModel>(`
+      SELECT Tasks.Id, Tasks.Name, Tasks.Order, Tasks.Threshold, Tasks.Cost, Tasks.Visibility
+      FROM Tasks
+      WHERE Tasks.Module_Id = ${moduleId}
+      ORDER BY Tasks.Order
+      LIMIT 100
     `);
-    return result.recordset;
+    return result;
   }
 
   public async getTaskList(): Promise<TaskListModel[]> {
-    const result = await query<TaskListModel>(`
-      SELECT TOP(100)
-        [dbo].[Tasks].[Id],
-        [dbo].[Tasks].[Name],
-        [dbo].[Tasks].[Order],
-        [dbo].[Tasks].[Threshold],
-        [dbo].[Tasks].[Cost],
-        [dbo].[Tasks].[Visibility],
-        [dbo].[Tasks].[Module_Id]
-      FROM [dbo].[Tasks]
-      ORDER BY [dbo].[Tasks].[Order]
+    const result = await dbConnection.query<TaskListModel>(`
+      SELECT
+        Tasks.Id,
+        Tasks.Name,
+        Tasks.Order,
+        Tasks.Threshold,
+        Tasks.Cost,
+        Tasks.Visibility,
+        Tasks.Module_Id
+      FROM Tasks
+      ORDER BY Tasks.Order
+      LIMIT 100
     `);
-    return result.recordset;
+    return result;
   }
 
   public async createUserTask(task: UserTaskModel): Promise<boolean> {
     try {
-      await query(`
-          INSERT INTO [dbo].[UserTask] ([User_Id], [Task_Id], [Score], [Accepted], [Rejected])
+      await dbConnection.query(`
+          INSERT INTO UserTask (User_Id, Task_Id, Score, Accepted, Rejected)
           VALUES ('${task.User_Id}', '${task.Task_Id}', '${task.Score}', '${task.Accepted}', '${task.Rejected}');
       `);
       return true;
@@ -119,12 +123,12 @@ export class TaskRepository {
 
   public async updateUserTask(task: UserTaskModel): Promise<boolean> {
     try {
-      await query(`
-          UPDATE [dbo].[UserTask]
+      await dbConnection.query(`
+          UPDATE UserTask
           SET 
-            [Score] = ${task.Score}, [Accepted] = ${task.Accepted}, [Rejected] = ${task.Rejected}
+            Score = ${task.Score}, Accepted = ${task.Accepted}, Rejected = ${task.Rejected}
           WHERE 
-            [User_Id] = ${task.User_Id} AND [Task_Id] = ${task.Task_Id};
+            User_Id = ${task.User_Id} AND Task_Id = ${task.Task_Id};
       `);
       return true;
     } catch {
@@ -143,12 +147,12 @@ export class TaskRepository {
     }
 
     try {
-      await query(`
-          UPDATE [dbo].[UserTask]
-          SET 
-            [Liked] = ${liked}
-          WHERE 
-            [User_Id] = ${userId} AND [Task_Id] = ${taskId};
+      await dbConnection.query(`
+        UPDATE UserTask
+        SET 
+          Liked = ${liked}
+        WHERE 
+          User_Id = ${userId} AND Task_Id = ${taskId};
       `);
       return true;
     } catch {
@@ -157,86 +161,87 @@ export class TaskRepository {
   }
 
   public async findUserTask(userId: number, taskId: number): Promise<UserTaskModel> {
-    const result = await query<UserTaskModel>(`
-      SELECT TOP (1) *
+    const result = await dbConnection.query<UserTaskModel>(`
+      SELECT *
       FROM
-          [dbo].[UserTask]
+          UserTask
       WHERE
-          [dbo].[UserTask].[User_Id] = '${userId}' AND [dbo].[UserTask].[Task_Id] = '${taskId}'
+          UserTask.User_Id = '${userId}' AND UserTask.Task_Id = '${taskId}'
+      LIMIT 1
     `);
-    return result.recordset[0];
+    return result[0];
   }
 
   public async getUserTaskResults(userId: number): Promise<UserTaskResultModel[]> {
-    const result = await query<UserTaskResultModel>(`
+    const result = await dbConnection.query<UserTaskResultModel>(`
       SELECT
-        [dbo].[Tasks].[Id],
-        [dbo].[Tasks].[Module_Id],
-        [dbo].[Tasks].[Name],
-        [dbo].[Tasks].[Order],
-        [dbo].[Tasks].[Cost],
-        [dbo].[UserTask].[Score],
-        [dbo].[UserTask].[Accepted],
-        [dbo].[UserTask].[Rejected]
+        Tasks.Id,
+        Tasks.Module_Id,
+        Tasks.Name,
+        Tasks.Order,
+        Tasks.Cost,
+        UserTask.Score,
+        UserTask.Accepted,
+        UserTask.Rejected
       FROM
-          [dbo].[UserTask]
-      INNER JOIN [dbo].[Tasks] ON [dbo].[UserTask].[Task_Id] = [dbo].[Tasks].[Id]
+          UserTask
+      INNER JOIN Tasks ON UserTask.Task_Id = Tasks.Id
       WHERE
-          [dbo].[UserTask].[User_Id] = '${userId}'
-      ORDER BY [dbo].[Tasks].[Order]
+          UserTask.User_Id = '${userId}'
+      ORDER BY Tasks.Order
     `);
-    return result.recordset;
+    return result;
   }
 
   public async getUserModuleTaskResults(userId: number, moduleId: number): Promise<UserTaskResultModel[]> {
-    const result = await query<UserTaskResultModel>(`
+    const result = await dbConnection.query<UserTaskResultModel>(`
       SELECT 
-        [dbo].[Tasks].[Id],
-        [dbo].[Tasks].[Module_Id],
-        [dbo].[Tasks].[Name],
-        [dbo].[Tasks].[Order],
-        [dbo].[Tasks].[Cost],
-        ISNULL([dbo].[UserTask].[Score], 0) AS Score,
-        ISNULL([dbo].[UserTask].[Accepted], 0) as Accepted,
-        ISNULL([dbo].[UserTask].[Rejected], 0) as Rejected
+        Tasks.Id,
+        Tasks.Module_Id,
+        Tasks.Name,
+        Tasks.Order,
+        Tasks.Cost,
+        IFNULL(UserTask.Score, 0) AS Score,
+        IFNULL(UserTask.Accepted, 0) as Accepted,
+        IFNULL(UserTask.Rejected, 0) as Rejected
       FROM
-          [dbo].[Tasks]
-      LEFT JOIN [dbo].[UserTask] ON [dbo].[Tasks].[Id] = [dbo].[UserTask].[Task_Id] AND [dbo].[UserTask].[User_Id] = ${userId}
+          Tasks
+      LEFT JOIN UserTask ON Tasks.Id = UserTask.Task_Id AND UserTask.User_Id = ${userId}
       WHERE
-          [dbo].[Tasks].[Module_Id] = ${moduleId} AND [dbo].[Tasks].[Visibility] = 1
-      ORDER BY [dbo].[Tasks].[Order]
+          Tasks.Module_Id = ${moduleId} AND Tasks.Visibility = 1
+      ORDER BY Tasks.Order
     `);
-    return result.recordset;
+    return result;
   }
 
   public async findNext(userId: number): Promise<TaskModel> {
-    const result = await query<TaskModel>(`
+    const result = await dbConnection.query<TaskModel>(`
         SELECT
-            [dbo].[Tasks].*
+            Tasks.*
         FROM
-            [dbo].[Tasks]
-        LEFT JOIN [dbo].[UserTask] ON [dbo].[Tasks].[Id] = [dbo].[UserTask].[Task_Id]
+            Tasks
+        LEFT JOIN UserTask ON Tasks.Id = UserTask.Task_Id
         WHERE
-            [dbo].[Tasks].[Visibility] = 1 AND 
+            Tasks.Visibility = 1 AND 
             (
-                ([dbo].[UserTask].[User_Id] IS NULL) OR
-                ([dbo].[UserTask].[User_Id] = ${userId} AND [dbo].[UserTask].[Accepted] = 0)
+                (UserTask.User_Id IS NULL) OR
+                (UserTask.User_Id = ${userId} AND UserTask.Accepted = 0)
             )
-        ORDER BY [dbo].[Tasks].[Order]
+        ORDER BY Tasks.Order
     `);
-    return result.recordset[0];
+    return result[0];
   }
 
   public async getUserScore(userId: number): Promise<number> {
-    const result = await query<number>(`
-      SELECT SUM ([dbo].[UserTask].[Score])
+    const result = await dbConnection.query<number>(`
+      SELECT SUM(UserTask.Score) as 'UserScore'
       FROM
-          [dbo].[UserTask]
-      INNER JOIN [dbo].[Tasks] ON [dbo].[UserTask].[Task_Id] = [dbo].[Tasks].[Id]
+          UserTask
+      INNER JOIN Tasks ON UserTask.Task_Id = Tasks.Id
       WHERE
-          [dbo].[UserTask].[User_Id] = '${userId}' AND [dbo].[UserTask].[Accepted] = 1
+          UserTask.User_Id = '${userId}' AND UserTask.Accepted = 1
     `);
-    return result.recordset[0][''] || 0;
+    return result[0]['UserScore'] || 0;
   }
 }
 

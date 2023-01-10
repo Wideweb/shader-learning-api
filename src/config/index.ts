@@ -5,7 +5,11 @@ export const CREDENTIALS = process.env.CREDENTIALS === 'true';
 export const {
   NODE_ENV,
   PORT,
-  DB,
+  DB_HOST,
+  DB_PORT,
+  DB_NAME,
+  DB_USER,
+  DB_PASSWORD,
   ACCESS_TOKEN_SECRET,
   ACCESS_TOKEN_LIFE,
   REFRESH_TOKEN_SECRET,

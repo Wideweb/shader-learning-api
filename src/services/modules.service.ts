@@ -108,6 +108,57 @@ class ModulesService {
     }));
   }
 
+  public async toggleLock(moduleId: number): Promise<boolean> {
+    const module: ModuleModel = await moduleRepository.findById(moduleId);
+    if (module == null) {
+      throw new HttpException(404, `Module with id=${moduleId} doesn't exist`);
+    }
+
+    module.Locked = module.Locked == 0 ? 1 : 0;
+    const result = await moduleRepository.updateModule(module);
+
+    if (!result) {
+      throw new HttpException(500, 'Module lock update error');
+    }
+
+    return module.Locked == 1;
+  }
+
+  public async updateName(moduleId: number, name: string): Promise<boolean> {
+    let module = await moduleRepository.findByName(name);
+    if (module && module.Id != moduleId) throw new ModuleNameNotUniqueException(name);
+
+    module = await moduleRepository.findById(moduleId);
+    if (module == null) {
+      throw new HttpException(404, `Module with id=${moduleId} doesn't exist`);
+    }
+
+    module.Name = name;
+    const result = await moduleRepository.updateModule(module);
+
+    if (!result) {
+      throw new HttpException(500, 'Module name update error');
+    }
+
+    return true;
+  }
+
+  public async updateDescription(moduleId: number, description: string): Promise<boolean> {
+    const module: ModuleModel = await moduleRepository.findById(moduleId);
+    if (module == null) {
+      throw new HttpException(404, `Module with id=${moduleId} doesn't exist`);
+    }
+
+    module.Description = description;
+    const result = await moduleRepository.updateModule(module);
+
+    if (!result) {
+      throw new HttpException(500, 'Module description update error');
+    }
+
+    return true;
+  }
+
   public async reorderTasks(moduleId: number, oldOrder: number, newOrder: number): Promise<boolean> {
     return await moduleRepository.rerderTasks(moduleId, oldOrder, newOrder);
   }

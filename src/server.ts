@@ -10,4 +10,6 @@ validateEnv();
 
 const app = new App([new IndexRoute(), new UsersRoute(), new AuthRoute(), new TasksRoute(), new ModuleRoute()]);
 
+process.on('exit', () => app.free());
+
 app.listen();
