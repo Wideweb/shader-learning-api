@@ -39,8 +39,6 @@ class TasksRoute implements Routes {
 
     this.router.get(`${this.path}/:id/userTask`, hasAllPermissions(['task_view']), this.tasksController.getUserTask);
 
-    this.router.get(`${this.path}/progress`, hasAllPermissions(['task_submit']), this.tasksController.getProgress);
-
     this.router.post(
       `${this.path}/:id/submitWithValidation`,
       hasAllPermissions(['task_submit']),

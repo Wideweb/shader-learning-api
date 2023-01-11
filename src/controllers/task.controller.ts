@@ -117,17 +117,6 @@ class TasksController {
     }
   };
 
-  public getProgress = async (req: RequestWithUser, res: Response, next: NextFunction) => {
-    try {
-      const userData: User = req.user;
-      const results: UserTaskResultDto[] = await taskService.getUserTaskResults(userData.id);
-
-      res.status(200).json(results);
-    } catch (error) {
-      next(error);
-    }
-  };
-
   public submitWithValidation = async (req: RequestWithUser, res: Response, next: NextFunction) => {
     try {
       const userData: User = req.user;

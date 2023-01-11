@@ -1,5 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import userService from '@services/users.service';
+import taskService from '@services/tasks.service';
+import { UserTaskResultDto } from '@/dtos/tasks.dto';
 
 class UsersController {
   public getRankedList = async (req: Request, res: Response, next: NextFunction) => {
@@ -16,6 +18,17 @@ class UsersController {
       const userId: number = parseInt(req.params.id);
       const profile = await userService.getProfile(userId);
       res.status(200).json(profile);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public getProgress = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const userId: number = parseInt(req.params.id);
+      const results: UserTaskResultDto[] = await taskService.getUserTaskResults(userId);
+
+      res.status(200).json(results);
     } catch (error) {
       next(error);
     }
