@@ -51,7 +51,7 @@ CREATE TABLE `Modules`(
 	`Name` nvarchar(255) NOT NULL,
     `Description` TEXT NOT NULL,
 	`CreatedBy` INT NOT NULL,
-	`Locked` BIT DEFAULT 1,
+	`Locked` TINYINT DEFAULT 1,
 	`Order` INT NOT NULL,
 
 	PRIMARY KEY (`Id`),
@@ -67,7 +67,7 @@ CREATE TABLE `Tasks`(
     `Threshold` INT NOT NULL,
     `Order` INT NOT NULL,
     `Cost` INT NOT NULL,
-	`Visibility` BIT DEFAULT 1,
+	`Visibility` TINYINT DEFAULT 1,
 	`CreatedBy` INT NOT NULL,
 	`Module_Id` INT NOT NULL,
 
@@ -83,9 +83,9 @@ CREATE TABLE `UserTask`(
     `User_Id` INT NOT NULL,
     `Task_Id` INT NOT NULL,
     `Score` INT NOT NULL,
-    `Accepted` bit DEFAULT 0,
-    `Rejected` bit DEFAULT 0,
-	`Liked` bit DEFAULT NULL,
+    `Accepted` TINYINT DEFAULT 0,
+    `Rejected` TINYINT DEFAULT 0,
+	`Liked` TINYINT DEFAULT NULL,
 
 	PRIMARY KEY (`User_Id`, `Task_Id`) ,
 	FOREIGN KEY (`User_Id`) REFERENCES `Users`(`Id`),
