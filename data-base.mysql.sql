@@ -13,11 +13,10 @@ ROLES VALUES
 */
 INSERT INTO `Roles` (`RoleName`)
 VALUES ('Administrator');
-GO
 
 INSERT INTO `Roles` (`RoleName`)
 VALUES ('User');
-GO
+
 
 /*
 USER
@@ -90,4 +89,147 @@ CREATE TABLE `UserTask`(
 	PRIMARY KEY (`User_Id`, `Task_Id`) ,
 	FOREIGN KEY (`User_Id`) REFERENCES `Users`(`Id`),
 	FOREIGN KEY (`Task_Id`) REFERENCES `Tasks`(`Id`)
+)
+
+/*
+PERMISSIONS
+*/
+CREATE TABLE `Permissions`(
+	`Id` INT NOT NULL,
+	`Name` nvarchar(255) NOT NULL,
+    
+	PRIMARY KEY (`Id`)
+)
+
+INSERT INTO `Permissions` (`Id`, `Name`)
+VALUES (1, 'profile_view');
+
+INSERT INTO `Permissions` (`Id`, `Name`)
+VALUES (2, 'users_rating');
+
+INSERT INTO `Permissions` (`Id`, `Name`)
+VALUES (3, 'task_view');
+
+INSERT INTO `Permissions` (`Id`, `Name`)
+VALUES (4, 'task_submit');
+
+INSERT INTO `Permissions` (`Id`, `Name`)
+VALUES (5, 'task_create');
+
+INSERT INTO `Permissions` (`Id`, `Name`)
+VALUES (6, 'task_edit');
+
+INSERT INTO `Permissions` (`Id`, `Name`)
+VALUES (7, 'task_edit_all');
+
+INSERT INTO `Permissions` (`Id`, `Name`)
+VALUES (8, 'task_edit_visibility');
+
+INSERT INTO `Permissions` (`Id`, `Name`)
+VALUES (9, 'task_delete');
+
+INSERT INTO `Permissions` (`Id`, `Name`)
+VALUES (10, 'task_reorder');
+
+INSERT INTO `Permissions` (`Id`, `Name`)
+VALUES (11, 'module_create');
+
+INSERT INTO `Permissions` (`Id`, `Name`)
+VALUES (12, 'module_view');
+
+INSERT INTO `Permissions` (`Id`, `Name`)
+VALUES (13, 'module_edit');
+
+INSERT INTO `Permissions` (`Id`, `Name`)
+VALUES (14, 'module_edit_all');
+
+INSERT INTO `Permissions` (`Id`, `Name`)
+VALUES (15, 'profile_view_all');
+
+/*
+ROLE PERMISSIONS
+*/
+CREATE TABLE `RolePermissions`(
+	`Role_Id` INT NOT NULL,
+	`Permission_Id` INT NOT NULL,
+	
+    
+	PRIMARY KEY (`Role_Id`, `Permission_Id`) ,
+	FOREIGN KEY (`Role_Id`) REFERENCES `Roles`(`Id`)
+	FOREIGN KEY (`Permission_Id`) REFERENCES `Permissions`(`Id`),
+)
+
+INSERT INTO `RolePermissions` (`Role_Id`, `Permission_Id`)
+VALUES (1, 1);
+
+INSERT INTO `RolePermissions` (`Role_Id`, `Permission_Id`)
+VALUES (1, 2);
+
+INSERT INTO `RolePermissions` (`Role_Id`, `Permission_Id`)
+VALUES (1, 3);
+
+INSERT INTO `RolePermissions` (`Role_Id`, `Permission_Id`)
+VALUES (1, 4);
+
+INSERT INTO `RolePermissions` (`Role_Id`, `Permission_Id`)
+VALUES (1, 5);
+
+INSERT INTO `RolePermissions` (`Role_Id`, `Permission_Id`)
+VALUES (1, 6);
+
+INSERT INTO `RolePermissions` (`Role_Id`, `Permission_Id`)
+VALUES (1, 7);
+
+INSERT INTO `RolePermissions` (`Role_Id`, `Permission_Id`)
+VALUES (1, 8);
+
+INSERT INTO `RolePermissions` (`Role_Id`, `Permission_Id`)
+VALUES (1, 9);
+
+INSERT INTO `RolePermissions` (`Role_Id`, `Permission_Id`)
+VALUES (1, 10);
+
+INSERT INTO `RolePermissions` (`Role_Id`, `Permission_Id`)
+VALUES (1, 11);
+
+INSERT INTO `RolePermissions` (`Role_Id`, `Permission_Id`)
+VALUES (1, 12);
+
+INSERT INTO `RolePermissions` (`Role_Id`, `Permission_Id`)
+VALUES (1, 13);
+
+INSERT INTO `RolePermissions` (`Role_Id`, `Permission_Id`)
+VALUES (1, 14);
+
+INSERT INTO `RolePermissions` (`Role_Id`, `Permission_Id`)
+VALUES (1, 15);
+
+INSERT INTO `RolePermissions` (`Role_Id`, `Permission_Id`)
+VALUES (2, 1);
+
+INSERT INTO `RolePermissions` (`Role_Id`, `Permission_Id`)
+VALUES (2, 2);
+
+INSERT INTO `RolePermissions` (`Role_Id`, `Permission_Id`)
+VALUES (2, 3);
+
+INSERT INTO `RolePermissions` (`Role_Id`, `Permission_Id`)
+VALUES (2, 4);
+
+INSERT INTO `RolePermissions` (`Role_Id`, `Permission_Id`)
+VALUES (2, 12);
+
+INSERT INTO `RolePermissions` (`Role_Id`, `Permission_Id`)
+VALUES (2, 15);
+
+/*
+USER PERMISSIONS
+*/
+CREATE TABLE `UserPermissions`(
+	`User_Id` INT NOT NULL,
+	`Permission_Id` INT NOT NULL,
+    
+	PRIMARY KEY (`User_Id`, `Permission_Id`) ,
+	FOREIGN KEY (`User_Id`) REFERENCES `Users`(`Id`)
+	FOREIGN KEY (`Permission_Id`) REFERENCES `Permissions`(`Id`),
 )

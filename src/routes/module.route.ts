@@ -24,7 +24,7 @@ class ModuleRoute implements Routes {
 
     this.router.get(`${this.path}/:id/get`, hasAllPermissions(['module_view']), this.controller.get);
 
-    this.router.get(`${this.path}/list`, hasAllPermissions(['module_view_all']), this.controller.list);
+    this.router.get(`${this.path}/list`, hasAllPermissions(['module_view']), this.controller.list);
 
     this.router.put(
       `${this.path}/:id/update`,
@@ -49,7 +49,7 @@ class ModuleRoute implements Routes {
 
     this.router.put(`${this.path}/:id/toggleLock`, hasAllPermissions(['module_edit']), this.controller.toggleLock);
 
-    this.router.get(`${this.path}/:id/tasks/list`, hasAllPermissions(['module_view']), this.controller.taskList);
+    this.router.get(`${this.path}/:id/tasks/list`, hasAllPermissions(['module_view', 'task_view']), this.controller.taskList);
 
     this.router.put(
       `${this.path}/:id/tasks/reorder`,

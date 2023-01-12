@@ -7,6 +7,7 @@ import { DataStoredInRefreshToken, DataStoredInToken, TokenData } from '@interfa
 import { User } from '@interfaces/users.interface';
 import { isEmpty } from '@utils/util';
 import userRepository from '@dataAccess/users.repository';
+import permissionRepository from '@dataAccess/permissions.repository';
 import { UserModel } from '@dataAccess/models/user.model';
 import { UserNameNotFoundExcrption } from '@exceptions/UserNameNotFoundException';
 import { PasswordMatchException } from '@exceptions/PasswordMatchException';
@@ -41,13 +42,15 @@ class AuthService {
     const createdUser = await userRepository.findUserByEmail(userData.email);
     if (!createdUser) throw new HttpException(500, `User with Email ${userData.email} is not created`);
 
-    const tokenData = this.createToken(createdUser);
+    const permissions = await this.getPermissions(findUser.Id);
+    const tokenData = this.createToken(createdUser, permissions);
+
     const user: User = {
       id: createdUser.Id,
       name: createdUser.UserName,
       email: createdUser.Email,
       roleId: createdUser.Role_Id,
-      permissions: this.getPermissions(createdUser.Role_Id),
+      permissions,
     };
 
     return { tokenData, user };
@@ -62,13 +65,15 @@ class AuthService {
     const isPasswordMatching: boolean = await compare(userData.password, findUser.Password);
     if (!isPasswordMatching) throw new PasswordMatchException();
 
-    const tokenData = this.createToken(findUser);
+    const permissions = await this.getPermissions(findUser.Id);
+    const tokenData = this.createToken(findUser, permissions);
+
     const user: User = {
       id: findUser.Id,
       name: findUser.UserName,
       email: findUser.Email,
       roleId: findUser.Role_Id,
-      permissions: this.getPermissions(findUser.Role_Id),
+      permissions,
     };
 
     return { tokenData, user };
@@ -97,12 +102,14 @@ class AuthService {
       throw new HttpException(400, 'invalid refreshToken');
     }
 
-    const accessToken = this.createAccessToken(findUser);
+    const permissions = await this.getPermissions(userId);
+
+    const accessToken = this.createAccessToken(findUser, permissions);
     return accessToken;
   }
 
-  private createToken(user: UserModel): TokenData {
-    const accessToken = this.createAccessToken(user);
+  private createToken(user: UserModel, permissions: string[]): TokenData {
+    const accessToken = this.createAccessToken(user, permissions);
     const refreshToken = this.createRefreshToken(user);
 
     userRepository.setRefreshToken(user.Id, refreshToken.token);
@@ -115,8 +122,8 @@ class AuthService {
     };
   }
 
-  private createAccessToken(user: UserModel): { token: string; expiresIn: number } {
-    const storedData: DataStoredInToken = { id: user.Id };
+  private createAccessToken(user: UserModel, permissions: string[]): { token: string; expiresIn: number } {
+    const storedData: DataStoredInToken = { id: user.Id, permissions };
     const secret: string = ACCESS_TOKEN_SECRET;
     const expiresIn = Number.parseInt(ACCESS_TOKEN_LIFE);
 
@@ -141,28 +148,30 @@ class AuthService {
     return `Authorization=${token}; HttpOnly; Max-Age=${expiresIn};`;
   }
 
-  public getPermissions(roleId: number): string[] {
-    if (roleId == 1) {
-      return [
-        'task_view',
-        'task_submit',
-        'task_create',
-        'task_edit',
-        'task_visibility',
-        'task_delete',
-        'task_reorder',
-        'task_view_all',
-        'task_edit_all',
-        'users-rating',
-        'view-profile',
-        'module_create',
-        'module_view',
-        'module_view_all',
-        'module_edit',
-      ];
-    }
+  private async getPermissions(userId: number): Promise<string[]> {
+    const userPermissions = await permissionRepository.getUserAndRolePermissions(userId);
+    return userPermissions.map(p => p.Name);
 
-    return ['task_view', 'task_submit', 'users-rating', 'view-profile', 'module_view', 'module_view_all'];
+    // if (roleId == 1) {
+    //   return [
+    //     'profile_view',
+    //     'users_rating',
+    //     'task_view',
+    //     'task_submit',
+    //     'task_create',
+    //     'task_edit',
+    //     'task_edit_all',
+    //     'task_visibility',
+    //     'task_delete',
+    //     'task_reorder',
+    //     'module_create',
+    //     'module_view',
+    //     'module_edit',
+    //     'module_edit_all',
+    //   ];
+    // }
+
+    // return ['profile_view', 'users_rating', 'task_view', 'task_submit', 'module_view'];
   }
 }
 

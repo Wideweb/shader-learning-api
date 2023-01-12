@@ -13,9 +13,9 @@ class UsersRoute implements Routes {
   }
 
   private initializeRoutes() {
-    this.router.get(`${this.path}/rating`, hasAllPermissions(['users-rating']), this.usersController.getRankedList);
-    this.router.get(`${this.path}/:id/profile`, hasAllPermissions(['view-profile']), this.usersController.getProfile);
-    this.router.get(`${this.path}/:id/progress`, hasAllPermissions(['view-profile']), this.usersController.getProgress);
+    this.router.get(`${this.path}/rating`, hasAllPermissions(['users_rating']), this.usersController.getRankedList);
+    this.router.get(`${this.path}/:id/profile`, hasAllPermissions(['profile_view_all']), this.usersController.getProfile);
+    this.router.get(`${this.path}/:id/progress`, hasAllPermissions(['profile_view_all']), this.usersController.getProgress);
     // this.router.get(`${this.path}`, this.usersController.getUsers);
     // this.router.get(`${this.path}/:id`, this.usersController.getUserById);
     // this.router.post(`${this.path}`, validationMiddleware(CreateUserDto, 'body'), this.usersController.createUser);

@@ -3,6 +3,7 @@ import { User } from '@interfaces/users.interface';
 
 export interface DataStoredInToken {
   id: number;
+  permissions: string[];
 }
 
 export interface DataStoredInRefreshToken {

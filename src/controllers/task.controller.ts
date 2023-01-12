@@ -8,7 +8,6 @@ import {
   TaskSubmitWithValidationDto,
   UpdateTaskDto,
   UserTaskDto,
-  UserTaskResultDto,
 } from '@dtos/tasks.dto';
 import { logger } from '@utils/logger';
 import taskService from '@services/tasks.service';

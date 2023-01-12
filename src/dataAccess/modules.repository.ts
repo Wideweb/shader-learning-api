@@ -100,10 +100,10 @@ export class ModuleRepository {
       await dbConnection.query(
         `
         UPDATE Tasks
-        SET Order = 
-          CASE Order WHEN :oldOrder THEN :newOrder
-          ELSE Order + SIGN(:oldOrder - :newOrder) END
-        WHERE Module_Id = :moduleId AND Order BETWEEN LEAST(:oldOrder, :newOrder) AND GREATEST(:oldOrder, :newOrder);
+        SET \`Order\` = 
+          CASE \`Order\` WHEN :oldOrder THEN :newOrder
+          ELSE \`Order\` + SIGN(:oldOrder - :newOrder) END
+        WHERE Module_Id = :moduleId AND \`Order\` BETWEEN LEAST(:oldOrder, :newOrder) AND GREATEST(:oldOrder, :newOrder);
       `,
         { oldOrder, newOrder, moduleId },
       );
