@@ -19,6 +19,7 @@ import { User } from '@/interfaces/users.interface';
 import amazonFileStorage from './amazonFileStorage';
 import { TaskNameNotUniqueException } from '@/exceptions/TaskNameNotUniqueException';
 import userRepository from '@/dataAccess/users.repository';
+import tempStorage from './tempStorage';
 
 class TaskService {
   public async createTask(task: CreateTaskDto, userId: number): Promise<number> {
@@ -37,6 +38,8 @@ class TaskService {
       Cost: task.cost,
       Visibility: task.visibility ? 1 : 0,
       CreatedBy: userId,
+      Channel_1: task.channel1 ? 1 : 0,
+      Channel_2: task.channel2 ? 1 : 0,
     });
 
     if (taskId < 0) {
@@ -46,6 +49,22 @@ class TaskService {
     await amazonFileStorage.save(`Tasks/${taskId}`, 'vertex.glsl', task.vertexShader);
     await amazonFileStorage.save(`Tasks/${taskId}`, 'fragment.glsl', task.fragmentShader);
     await amazonFileStorage.save(`Tasks/${taskId}`, 'description.md', task.description);
+
+    if (task.channel1) {
+      const channel1 = await tempStorage.get(task.channel1);
+      await amazonFileStorage.save(`Tasks/${taskId}`, 'channel_1', channel1);
+      await tempStorage.remove(task.channel1);
+    } else {
+      // await amazonFileStorage.remove(`Tasks/${taskId}`, 'channel_1', channel1);
+    }
+
+    if (task.channel2) {
+      const channel2 = await tempStorage.get(task.channel2);
+      await amazonFileStorage.save(`Tasks/${taskId}`, 'channel_2', channel2);
+      await tempStorage.remove(task.channel2);
+    } else {
+      // await amazonFileStorage.remove(`Tasks/${taskId}`, 'channel_1', channel1);
+    }
 
     return taskId;
   }
@@ -67,6 +86,8 @@ class TaskService {
       Cost: task.cost,
       Visibility: task.visibility ? 1 : 0,
       CreatedBy: findTask.CreatedBy,
+      Channel_1: task.channel1 ? 1 : 0,
+      Channel_2: task.channel2 ? 1 : 0,
     });
 
     if (!result) {
@@ -76,6 +97,18 @@ class TaskService {
     await amazonFileStorage.save(`Tasks/${task.id}`, 'vertex.glsl', task.vertexShader);
     await amazonFileStorage.save(`Tasks/${task.id}`, 'fragment.glsl', task.fragmentShader);
     await amazonFileStorage.save(`Tasks/${task.id}`, 'description.md', task.description);
+
+    if (task.channel1) {
+      const channel1 = await tempStorage.get(task.channel1);
+      await amazonFileStorage.save(`Tasks/${task.id}`, 'channel_1', channel1);
+      await tempStorage.remove(task.channel1);
+    }
+
+    if (task.channel2) {
+      const channel2 = await tempStorage.get(task.channel2);
+      await amazonFileStorage.save(`Tasks/${task.id}`, 'channel_2', channel2);
+      await tempStorage.remove(task.channel2);
+    }
 
     return task.id;
   }
@@ -125,7 +158,14 @@ class TaskService {
       dislikes,
       visibility: task.Visibility == 1,
       createdBy: { id: user.Id, name: user.UserName },
+      channel1: task.Channel_1 == 1,
+      channel2: task.Channel_2 == 1,
     };
+  }
+
+  public async getTaskChannel(taskId: number, index: number): Promise<Buffer> {
+    const channel = await amazonFileStorage.get(`Tasks/${taskId}`, `channel_${index}`);
+    return channel;
   }
 
   public async getModuleTaskList(moduleId: number): Promise<TaskListDto[]> {

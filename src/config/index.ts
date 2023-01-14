@@ -20,4 +20,5 @@ export const {
   AWS_ID,
   AWS_SECRET,
   AWS_BUCKET,
+  TEMP_FOLDER,
 } = process.env;

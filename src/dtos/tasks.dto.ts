@@ -1,4 +1,4 @@
-import { IsArray, IsBoolean, IsNumber, IsString } from 'class-validator';
+import { IsArray, IsBoolean, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class TaskDto {
   id: number;
@@ -30,6 +30,10 @@ export class TaskDto {
   visibility: boolean;
 
   createdBy: { id: number; name: string };
+
+  channel1: boolean;
+
+  channel2: boolean;
 }
 
 export class CreateTaskDto {
@@ -62,6 +66,12 @@ export class CreateTaskDto {
 
   @IsBoolean()
   visibility: boolean;
+
+  @IsOptional()
+  channel1: string | null;
+
+  @IsOptional()
+  channel2: string | null;
 }
 
 export class UpdateTaskDto extends CreateTaskDto {

@@ -31,6 +31,9 @@ class TasksController {
     try {
       const taskData: UpdateTaskDto = req.body;
 
+      // console.log(taskData);
+      // console.log(req.file?.path);
+
       const id = await taskService.updateTask(taskData);
       res.status(200).json(id);
     } catch (error) {
@@ -44,6 +47,18 @@ class TasksController {
       const task: TaskDto = await taskService.getTask(taskId);
 
       res.status(200).json(task);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public getChannel = async (req: RequestWithUser, res: Response, next: NextFunction) => {
+    try {
+      const taskId: number = parseInt(req.params.id);
+      const index: number = parseInt(req.params.index);
+
+      const buffer = await taskService.getTaskChannel(taskId, index);
+      res.status(200).send(buffer);
     } catch (error) {
       next(error);
     }

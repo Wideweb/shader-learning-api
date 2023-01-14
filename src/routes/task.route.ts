@@ -24,6 +24,8 @@ class TasksRoute implements Routes {
 
     this.router.get(`${this.path}/:id/get`, hasAllPermissions(['task_view']), this.tasksController.get);
 
+    this.router.get(`${this.path}/:id/channel/:index`, hasAllPermissions(['task_view']), this.tasksController.getChannel);
+
     this.router.put(`${this.path}/:id/toggleVisibility`, hasAllPermissions(['task_edit_visibility']), this.tasksController.toggleVisibility);
 
     this.router.put(

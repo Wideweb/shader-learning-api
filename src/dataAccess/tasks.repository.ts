@@ -32,8 +32,8 @@ export class TaskRepository {
     try {
       const result = await dbConnection.query(
         `
-          INSERT INTO Tasks (Name, Threshold, \`Order\`, Cost, Visibility, Module_Id, CreatedBy)
-          VALUES (:Name, :Threshold, :Order, :Cost, :Visibility, :Module_Id, :CreatedBy);
+        INSERT INTO Tasks (Name, Threshold, \`Order\`, Cost, Visibility, Module_Id, CreatedBy, Channel_1, Channel_2)
+        VALUES (:Name, :Threshold, :Order, :Cost, :Visibility, :Module_Id, :CreatedBy, :Channel_1, :Channel_2);
       `,
         { ...task },
       );
@@ -52,7 +52,7 @@ export class TaskRepository {
         `
         UPDATE Tasks
         SET 
-          Name = :Name, Threshold = :Threshold, \`Order\` = :Order, Cost = :Cost, Visibility = :Visibility
+          Name = :Name, Threshold = :Threshold, \`Order\` = :Order, Cost = :Cost, Visibility = :Visibility, Channel_1 = :Channel_1, Channel_2 = :Channel_2
         WHERE 
           Id = ${task.Id};
       `,

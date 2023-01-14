@@ -69,11 +69,19 @@ CREATE TABLE `Tasks`(
 	`Visibility` TINYINT DEFAULT 1,
 	`CreatedBy` INT NOT NULL,
 	`Module_Id` INT NOT NULL,
+	`Channel_1` TINYINT DEFAULT 0,
+	`Channel_2` TINYINT DEFAULT 0,
 
 	PRIMARY KEY (`Id`),
 	FOREIGN KEY (`Module_Id`) REFERENCES `Modules`(`Id`),
 	FOREIGN KEY (`CreatedBy`) REFERENCES `Users`(`Id`)
 )
+
+ALTER TABLE `Tasks`
+ADD Channel_1 TINYINT DEFAULT 0;
+
+ALTER TABLE `Tasks`
+ADD Channel_2 TINYINT DEFAULT 0;
 
 /*
 USER TASK
@@ -99,7 +107,7 @@ CREATE TABLE `Permissions`(
 	`Name` nvarchar(255) NOT NULL,
     
 	PRIMARY KEY (`Id`)
-)
+);
 
 INSERT INTO `Permissions` (`Id`, `Name`)
 VALUES (1, 'profile_view');
@@ -155,9 +163,9 @@ CREATE TABLE `RolePermissions`(
 	
     
 	PRIMARY KEY (`Role_Id`, `Permission_Id`) ,
-	FOREIGN KEY (`Role_Id`) REFERENCES `Roles`(`Id`)
-	FOREIGN KEY (`Permission_Id`) REFERENCES `Permissions`(`Id`),
-)
+	FOREIGN KEY (`Role_Id`) REFERENCES `Roles`(`Id`,
+	FOREIGN KEY (`Permission_Id`) REFERENCES `Permissions`(`Id`)
+);
 
 INSERT INTO `RolePermissions` (`Role_Id`, `Permission_Id`)
 VALUES (1, 1);
@@ -230,6 +238,6 @@ CREATE TABLE `UserPermissions`(
 	`Permission_Id` INT NOT NULL,
     
 	PRIMARY KEY (`User_Id`, `Permission_Id`) ,
-	FOREIGN KEY (`User_Id`) REFERENCES `Users`(`Id`)
-	FOREIGN KEY (`Permission_Id`) REFERENCES `Permissions`(`Id`),
-)
+	FOREIGN KEY (`User_Id`) REFERENCES `Users`(`Id`),
+	FOREIGN KEY (`Permission_Id`) REFERENCES `Permissions`(`Id`)
+);
