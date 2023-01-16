@@ -40,6 +40,9 @@ class TaskService {
       CreatedBy: userId,
       Channel_1: task.channel1 ? 1 : 0,
       Channel_2: task.channel2 ? 1 : 0,
+      Animated: task.animated ? 1 : 0,
+      AnimationSteps: task.animationSteps,
+      AnimationStepTime: task.animationStepTime,
     });
 
     if (taskId < 0) {
@@ -88,6 +91,9 @@ class TaskService {
       CreatedBy: findTask.CreatedBy,
       Channel_1: task.channel1 ? 1 : 0,
       Channel_2: task.channel2 ? 1 : 0,
+      Animated: task.animated ? 1 : 0,
+      AnimationSteps: task.animationSteps,
+      AnimationStepTime: task.animationStepTime,
     });
 
     if (!result) {
@@ -160,6 +166,9 @@ class TaskService {
       createdBy: { id: user.Id, name: user.UserName },
       channel1: task.Channel_1 == 1,
       channel2: task.Channel_2 == 1,
+      animated: task.Animated == 1,
+      animationSteps: task.AnimationSteps,
+      animationStepTime: task.AnimationStepTime,
     };
   }
 

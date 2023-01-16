@@ -34,6 +34,12 @@ export class TaskDto {
   channel1: boolean;
 
   channel2: boolean;
+
+  animated: boolean;
+
+  animationSteps: number | null;
+
+  animationStepTime: number | null;
 }
 
 export class CreateTaskDto {
@@ -72,6 +78,15 @@ export class CreateTaskDto {
 
   @IsOptional()
   channel2: string | null;
+
+  @IsBoolean()
+  animated: boolean;
+
+  @IsOptional()
+  animationSteps: number | null;
+
+  @IsOptional()
+  animationStepTime: number | null;
 }
 
 export class UpdateTaskDto extends CreateTaskDto {

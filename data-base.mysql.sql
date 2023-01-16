@@ -71,6 +71,9 @@ CREATE TABLE `Tasks`(
 	`Module_Id` INT NOT NULL,
 	`Channel_1` TINYINT DEFAULT 0,
 	`Channel_2` TINYINT DEFAULT 0,
+	`Animated` TINYINT DEFAULT 0,
+	`AnimationSteps` INT DEFAULT NULL,
+	`AnimationStepTime` INT DEFAULT NULL,
 
 	PRIMARY KEY (`Id`),
 	FOREIGN KEY (`Module_Id`) REFERENCES `Modules`(`Id`),
@@ -78,10 +81,13 @@ CREATE TABLE `Tasks`(
 )
 
 ALTER TABLE `Tasks`
-ADD Channel_1 TINYINT DEFAULT 0;
+ADD Animated TINYINT DEFAULT 0;
 
 ALTER TABLE `Tasks`
-ADD Channel_2 TINYINT DEFAULT 0;
+ADD AnimationSteps INT DEFAULT NULL;
+
+ALTER TABLE `Tasks`
+ADD AnimationStepTime INT DEFAULT NULL;
 
 /*
 USER TASK
