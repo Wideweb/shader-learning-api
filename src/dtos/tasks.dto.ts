@@ -31,15 +31,17 @@ export class TaskDto {
 
   createdBy: { id: number; name: string };
 
-  channel1: boolean;
-
-  channel2: boolean;
+  channels: TaskChannelDto[];
 
   animated: boolean;
 
   animationSteps: number | null;
 
   animationStepTime: number | null;
+}
+
+export class TaskChannelDto {
+  index: number;
 }
 
 export class CreateTaskDto {
@@ -73,11 +75,8 @@ export class CreateTaskDto {
   @IsBoolean()
   visibility: boolean;
 
-  @IsOptional()
-  channel1: string | null;
-
-  @IsOptional()
-  channel2: string | null;
+  @IsArray()
+  channels: CreateTaskChannelDto[];
 
   @IsBoolean()
   animated: boolean;
@@ -87,6 +86,10 @@ export class CreateTaskDto {
 
   @IsOptional()
   animationStepTime: number | null;
+}
+
+export class CreateTaskChannelDto {
+  file: string;
 }
 
 export class UpdateTaskDto extends CreateTaskDto {

@@ -69,8 +69,6 @@ CREATE TABLE `Tasks`(
 	`Visibility` TINYINT DEFAULT 1,
 	`CreatedBy` INT NOT NULL,
 	`Module_Id` INT NOT NULL,
-	`Channel_1` TINYINT DEFAULT 0,
-	`Channel_2` TINYINT DEFAULT 0,
 	`Animated` TINYINT DEFAULT 0,
 	`AnimationSteps` INT DEFAULT NULL,
 	`AnimationStepTime` INT DEFAULT NULL,
@@ -80,14 +78,16 @@ CREATE TABLE `Tasks`(
 	FOREIGN KEY (`CreatedBy`) REFERENCES `Users`(`Id`)
 )
 
-ALTER TABLE `Tasks`
-ADD Animated TINYINT DEFAULT 0;
+/*
+TASK CHANNEL
+*/
+CREATE TABLE `TaskChannels`(
+	`Task_Id` INT NOT NULL,
+	`Index` INT NOT NULL,
 
-ALTER TABLE `Tasks`
-ADD AnimationSteps INT DEFAULT NULL;
-
-ALTER TABLE `Tasks`
-ADD AnimationStepTime INT DEFAULT NULL;
+	PRIMARY KEY (`Task_Id`, `Index`),
+	FOREIGN KEY (`Task_Id`) REFERENCES `Tasks`(`Id`)
+)
 
 /*
 USER TASK

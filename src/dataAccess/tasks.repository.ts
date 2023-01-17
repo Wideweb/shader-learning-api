@@ -1,6 +1,6 @@
 import { logger } from '@/utils/logger';
 import dbConnection from './db-connection';
-import { TaskListModel, TaskModel, UserTaskModel, UserTaskResultModel } from './models/task.model';
+import { TaskChannelModel, TaskListModel, TaskModel, UserTaskModel, UserTaskResultModel } from './models/task.model';
 
 export class TaskRepository {
   public async findById(id: number): Promise<TaskModel> {
@@ -32,8 +32,8 @@ export class TaskRepository {
     try {
       const result = await dbConnection.query(
         `
-        INSERT INTO Tasks (Name, Threshold, \`Order\`, Cost, Visibility, Module_Id, CreatedBy, Channel_1, Channel_2, Animated, AnimationSteps, AnimationStepTime)
-        VALUES (:Name, :Threshold, :Order, :Cost, :Visibility, :Module_Id, :CreatedBy, :Channel_1, :Channel_2, :Animated, :AnimationSteps, :AnimationStepTime);
+        INSERT INTO Tasks (Name, Threshold, \`Order\`, Cost, Visibility, Module_Id, CreatedBy, Animated, AnimationSteps, AnimationStepTime)
+        VALUES (:Name, :Threshold, :Order, :Cost, :Visibility, :Module_Id, :CreatedBy, :Animated, :AnimationSteps, :AnimationStepTime);
       `,
         { ...task },
       );
@@ -57,8 +57,6 @@ export class TaskRepository {
           \`Order\` = :Order,
           Cost = :Cost,
           Visibility = :Visibility,
-          Channel_1 = :Channel_1,
-          Channel_2 = :Channel_2,
           Animated = :Animated,
           AnimationSteps = :AnimationSteps,
           AnimationStepTime = :AnimationStepTime
@@ -74,6 +72,40 @@ export class TaskRepository {
       );
       return false;
     }
+  }
+
+  public async getTaskChannels(taskId: number): Promise<TaskChannelModel[]> {
+    const result = await dbConnection.query<TaskChannelModel>(
+      `
+      SELECT *
+      FROM TaskChannels
+      WHERE TaskChannels.Task_Id = :taskId
+    `,
+      { taskId },
+    );
+    return result;
+  }
+
+  public async addTaskChannel(channel: TaskChannelModel): Promise<boolean> {
+    const result = await dbConnection.query(
+      `
+      INSERT INTO TaskChannels (Task_Id, \`Index\`)
+      VALUES (:Task_Id, :Index);
+    `,
+      { ...channel },
+    );
+    return result;
+  }
+
+  public async removeTaskChannel(channel: TaskChannelModel): Promise<boolean> {
+    const result = await dbConnection.query(
+      `
+      DELETE FROM TaskChannels
+      WHERE Task_Id = :Task_Id AND \`Index\` = :Index
+    `,
+      { ...channel },
+    );
+    return result;
   }
 
   public async getLikes(taskId: number): Promise<number> {

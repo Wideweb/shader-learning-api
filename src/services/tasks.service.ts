@@ -38,8 +38,6 @@ class TaskService {
       Cost: task.cost,
       Visibility: task.visibility ? 1 : 0,
       CreatedBy: userId,
-      Channel_1: task.channel1 ? 1 : 0,
-      Channel_2: task.channel2 ? 1 : 0,
       Animated: task.animated ? 1 : 0,
       AnimationSteps: task.animationSteps,
       AnimationStepTime: task.animationStepTime,
@@ -53,20 +51,13 @@ class TaskService {
     await amazonFileStorage.save(`Tasks/${taskId}`, 'fragment.glsl', task.fragmentShader);
     await amazonFileStorage.save(`Tasks/${taskId}`, 'description.md', task.description);
 
-    if (task.channel1) {
-      const channel1 = await tempStorage.get(task.channel1);
-      await amazonFileStorage.save(`Tasks/${taskId}`, 'channel_1', channel1);
-      await tempStorage.remove(task.channel1);
-    } else {
-      // await amazonFileStorage.remove(`Tasks/${taskId}`, 'channel_1', channel1);
-    }
-
-    if (task.channel2) {
-      const channel2 = await tempStorage.get(task.channel2);
-      await amazonFileStorage.save(`Tasks/${taskId}`, 'channel_2', channel2);
-      await tempStorage.remove(task.channel2);
-    } else {
-      // await amazonFileStorage.remove(`Tasks/${taskId}`, 'channel_1', channel1);
+    const channels = task.channels || [];
+    for (let i = 0; i < channels.length; i++) {
+      const fileId = channels[i].file;
+      const file = await tempStorage.get(fileId);
+      await amazonFileStorage.save(`Tasks/${taskId}`, `channel_${i}`, file);
+      await taskRepository.addTaskChannel({ Task_Id: taskId, Index: i });
+      await tempStorage.remove(fileId);
     }
 
     return taskId;
@@ -89,8 +80,6 @@ class TaskService {
       Cost: task.cost,
       Visibility: task.visibility ? 1 : 0,
       CreatedBy: findTask.CreatedBy,
-      Channel_1: task.channel1 ? 1 : 0,
-      Channel_2: task.channel2 ? 1 : 0,
       Animated: task.animated ? 1 : 0,
       AnimationSteps: task.animationSteps,
       AnimationStepTime: task.animationStepTime,
@@ -104,16 +93,22 @@ class TaskService {
     await amazonFileStorage.save(`Tasks/${task.id}`, 'fragment.glsl', task.fragmentShader);
     await amazonFileStorage.save(`Tasks/${task.id}`, 'description.md', task.description);
 
-    if (task.channel1) {
-      const channel1 = await tempStorage.get(task.channel1);
-      await amazonFileStorage.save(`Tasks/${task.id}`, 'channel_1', channel1);
-      await tempStorage.remove(task.channel1);
+    const oldChannels = await taskRepository.getTaskChannels(task.id);
+    const newChannels = task.channels || [];
+
+    for (let i = newChannels.length; i < oldChannels.length; i++) {
+      await taskRepository.removeTaskChannel(oldChannels[i]);
     }
 
-    if (task.channel2) {
-      const channel2 = await tempStorage.get(task.channel2);
-      await amazonFileStorage.save(`Tasks/${task.id}`, 'channel_2', channel2);
-      await tempStorage.remove(task.channel2);
+    for (let i = oldChannels.length; i < newChannels.length; i++) {
+      await taskRepository.addTaskChannel({ Task_Id: task.id, Index: i });
+    }
+
+    for (let i = 0; i < newChannels.length; i++) {
+      const fileId = newChannels[i].file;
+      const file = await tempStorage.get(fileId);
+      await amazonFileStorage.save(`Tasks/${task.id}`, `channel_${i}`, file);
+      await tempStorage.remove(fileId);
     }
 
     return task.id;
@@ -147,6 +142,7 @@ class TaskService {
     const descriptionBuffer = await amazonFileStorage.get(`Tasks/${task.Id}`, 'description.md');
 
     const user = await userRepository.findUserById(task.CreatedBy);
+    const channels = await taskRepository.getTaskChannels(task.Id);
 
     return {
       id: task.Id,
@@ -164,8 +160,7 @@ class TaskService {
       dislikes,
       visibility: task.Visibility == 1,
       createdBy: { id: user.Id, name: user.UserName },
-      channel1: task.Channel_1 == 1,
-      channel2: task.Channel_2 == 1,
+      channels: channels.map(c => ({ index: c.Index })),
       animated: task.Animated == 1,
       animationSteps: task.AnimationSteps,
       animationStepTime: task.AnimationStepTime,

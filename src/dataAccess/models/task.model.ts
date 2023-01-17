@@ -7,11 +7,14 @@ export interface TaskModel {
   Cost: number;
   Visibility: 0 | 1;
   CreatedBy: number;
-  Channel_1: 0 | 1;
-  Channel_2: 0 | 1;
   Animated: 0 | 1;
   AnimationSteps: number;
   AnimationStepTime: number;
+}
+
+export interface TaskChannelModel {
+  Task_Id: number;
+  Index: number;
 }
 
 export interface TaskListModel {
