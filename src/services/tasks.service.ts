@@ -188,6 +188,7 @@ class TaskService {
 
   public async getUserModuleTaskResults(userId: number, moduleId: number): Promise<UserTaskResultDto[]> {
     const tasks = await taskRepository.getUserModuleTaskResults(userId, moduleId);
+    const currentTask = tasks.find(it => !it.Accepted);
 
     return tasks.map(task => ({
       id: task.Id,
@@ -198,6 +199,7 @@ class TaskService {
       accepted: task.Accepted > 0,
       rejected: task.Rejected > 0,
       match: task.Score / task.Cost,
+      locked: currentTask && task.Order > currentTask.Order && task.Accepted != 1,
     }));
   }
 
@@ -227,6 +229,7 @@ class TaskService {
       accepted: task.Accepted > 0,
       rejected: task.Rejected > 0,
       match: task.Score / task.Cost,
+      locked: false,
     }));
   }
 

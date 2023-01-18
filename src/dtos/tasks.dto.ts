@@ -172,6 +172,8 @@ export class UserTaskResultDto {
   score: number;
 
   match: number;
+
+  locked: boolean;
 }
 
 export interface TaskListDto {
