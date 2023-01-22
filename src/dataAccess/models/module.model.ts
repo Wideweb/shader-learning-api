@@ -14,5 +14,14 @@ export interface ModuleListModel {
   Order: number;
   Locked: 0 | 1;
   Tasks: number;
+}
+
+export interface UserModuleListModel {
+  Id: number;
+  Name: string;
+  Description: string;
+  Order: number;
+  Locked: 0 | 1;
+  Tasks: number;
   AcceptedTasks: number;
 }

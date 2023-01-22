@@ -94,6 +94,10 @@ class AuthService {
   }
 
   public async refreshAccessToken(refreshToken: string): Promise<{ token: string; expiresIn: number }> {
+    if (isEmpty(refreshToken)) {
+      throw new HttpException(400, 'invalid refreshToken');
+    }
+
     const verificationResponse = (await verify(refreshToken, REFRESH_TOKEN_SECRET)) as DataStoredInToken;
     const userId = verificationResponse.id;
     const findUser = await userRepository.findUserById(userId);

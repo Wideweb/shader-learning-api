@@ -1,6 +1,6 @@
 import { logger } from '@/utils/logger';
 import dbConnection from './db-connection';
-import { ModuleListModel, ModuleModel } from './models/module.model';
+import { ModuleListModel, ModuleModel, UserModuleListModel } from './models/module.model';
 
 export class ModuleRepository {
   public async findById(id: number): Promise<ModuleModel> {
@@ -58,8 +58,33 @@ export class ModuleRepository {
     }
   }
 
-  public async getModuleList(userId: number): Promise<ModuleListModel[]> {
+  public async getModuleList(): Promise<ModuleListModel[]> {
     const result = await dbConnection.query<ModuleListModel>(
+      `
+      SELECT
+        Modules.Id,
+        Modules.Name,
+        Modules.Description,
+        Modules.Locked,
+        Modules.Order,
+        IFNULL(Module_Tasks.Size, 0) AS \`Tasks\`
+      FROM Modules
+      LEFT JOIN 
+          (
+              SELECT Tasks.Module_Id, Count(Tasks.Id) as Size
+              FROM Tasks
+              WHERE Tasks.Visibility = 1
+              GROUP BY Tasks.Module_Id
+          ) Module_Tasks ON Modules.Id = Module_Tasks.Module_Id
+      ORDER BY Modules.Order
+      LIMIT 100
+    `,
+    );
+    return result;
+  }
+
+  public async getUserModuleList(userId: number): Promise<UserModuleListModel[]> {
+    const result = await dbConnection.query<UserModuleListModel>(
       `
       SELECT
         Modules.Id,

@@ -1,6 +1,6 @@
 import { HttpException } from '@exceptions/HttpException';
 import userRepository from '@/dataAccess/users.repository';
-import { CreateModuleDto, ModuleDto, ModuleListDto, ModuleUserProgressDto, UpdateModuleDto } from '@/dtos/modules.dto';
+import { CreateModuleDto, ModuleDto, ModuleListDto, ModuleUserProgressDto, UpdateModuleDto, UserModuleListDto } from '@/dtos/modules.dto';
 import moduleRepository from '@/dataAccess/modules.repository';
 import { ModuleNameNotUniqueException } from '@/exceptions/ModuleNameNotUniqueException';
 import { ModuleModel } from '@/dataAccess/models/module.model';
@@ -94,8 +94,21 @@ class ModulesService {
     };
   }
 
-  public async getModuleList(userId: number): Promise<ModuleListDto[]> {
-    const modules = await moduleRepository.getModuleList(userId);
+  public async getModuleList(): Promise<ModuleListDto[]> {
+    const modules = await moduleRepository.getModuleList();
+
+    return modules.map(module => ({
+      id: module.Id,
+      name: module.Name,
+      description: module.Description,
+      tasks: module.Tasks,
+      order: module.Order,
+      locked: module.Locked == 1,
+    }));
+  }
+
+  public async getUserModuleList(userId: number): Promise<UserModuleListDto[]> {
+    const modules = await moduleRepository.getUserModuleList(userId);
 
     return modules.map(module => ({
       id: module.Id,

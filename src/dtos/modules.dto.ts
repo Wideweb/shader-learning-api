@@ -50,6 +50,15 @@ export interface ModuleListDto {
   name: string;
   description: string;
   tasks: number;
+  order: number;
+  locked: boolean;
+}
+
+export interface UserModuleListDto {
+  id: number;
+  name: string;
+  description: string;
+  tasks: number;
   acceptedTasks: number;
   order: number;
   locked: boolean;
