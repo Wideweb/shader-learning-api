@@ -64,9 +64,27 @@ class ModuleController {
   public get = async (req: RequestWithUser, res: Response, next: NextFunction) => {
     try {
       const moduleId: number = parseInt(req.params.id);
-      const task: ModuleDto = await moduleService.getModule(moduleId);
+      const module: ModuleDto = await moduleService.getModule(moduleId);
 
-      res.status(200).json(task);
+      res.status(200).json(module);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public view = async (req: RequestWithUser, res: Response, next: NextFunction) => {
+    try {
+      const moduleId: number = parseInt(req.params.id);
+      const module: ModuleDto = await moduleService.getModule(moduleId);
+
+      if (module.locked) {
+        res.status(200).json(null);
+        return;
+      }
+
+      module.tasks = module.tasks.filter(task => task.visibility);
+
+      res.status(200).json(module);
     } catch (error) {
       next(error);
     }
