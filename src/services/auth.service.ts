@@ -42,7 +42,7 @@ class AuthService {
     const createdUser = await userRepository.findUserByEmail(userData.email);
     if (!createdUser) throw new HttpException(500, `User with Email ${userData.email} is not created`);
 
-    const permissions = await this.getPermissions(findUser.Id);
+    const permissions = await this.getPermissions(createdUser.Id);
     const tokenData = this.createToken(createdUser, permissions);
 
     const user: User = {
