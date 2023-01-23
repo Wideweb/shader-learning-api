@@ -22,7 +22,9 @@ class ModuleRoute implements Routes {
       this.controller.create,
     );
 
-    this.router.get(`${this.path}/:id/get`, hasAllPermissions(['module_view']), this.controller.get);
+    this.router.get(`${this.path}/:id/get`, hasAllPermissions(['module_edit']), this.controller.get);
+
+    this.router.get(`${this.path}/:id/view`, hasAllPermissions(['module_view']), this.controller.view);
 
     this.router.get(`${this.path}/list`, hasAllPermissions(['module_view']), this.controller.list);
 
