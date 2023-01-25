@@ -11,6 +11,10 @@ export class TaskDto {
 
   fragmentShader: string;
 
+  useDefaultFragmentShader: boolean;
+
+  defaultFragmentShader: string | null;
+
   description: string;
 
   hints: TaskHintDto[];
@@ -56,6 +60,13 @@ export class CreateTaskDto {
 
   @IsString()
   fragmentShader: string;
+
+  @IsBoolean()
+  useDefaultFragmentShader: boolean;
+
+  @IsOptional()
+  @IsString()
+  defaultFragmentShader: string | null;
 
   @IsString()
   description: string;

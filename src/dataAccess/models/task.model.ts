@@ -6,6 +6,7 @@ export interface TaskModel {
   Order: number;
   Cost: number;
   Visibility: 0 | 1;
+  DefaultFragmentShader: 0 | 1;
   CreatedBy: number;
   Animated: 0 | 1;
   AnimationSteps: number;

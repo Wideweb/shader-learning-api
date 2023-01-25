@@ -67,6 +67,7 @@ CREATE TABLE `Tasks`(
     `Order` INT NOT NULL,
     `Cost` INT NOT NULL,
 	`Visibility` TINYINT DEFAULT 1,
+	`DefaultFragmentShader` TINYINT DEFAULT 0,
 	`CreatedBy` INT NOT NULL,
 	`Module_Id` INT NOT NULL,
 	`Animated` TINYINT DEFAULT 0,
