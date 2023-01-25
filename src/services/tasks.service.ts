@@ -37,6 +37,7 @@ class TaskService {
       Order: order,
       Cost: task.cost,
       Visibility: task.visibility ? 1 : 0,
+      DefaultFragmentShader: task.useDefaultFragmentShader ? 1 : 0,
       CreatedBy: userId,
       Animated: task.animated ? 1 : 0,
       AnimationSteps: task.animationSteps,
@@ -50,6 +51,10 @@ class TaskService {
     await amazonFileStorage.save(`Tasks/${taskId}`, 'vertex.glsl', task.vertexShader);
     await amazonFileStorage.save(`Tasks/${taskId}`, 'fragment.glsl', task.fragmentShader);
     await amazonFileStorage.save(`Tasks/${taskId}`, 'description.md', task.description);
+
+    if (task.useDefaultFragmentShader) {
+      await amazonFileStorage.save(`Tasks/${taskId}`, 'default-fragment.glsl', task.defaultFragmentShader || '');
+    }
 
     const channels = task.channels || [];
     for (let i = 0; i < channels.length; i++) {
@@ -79,6 +84,7 @@ class TaskService {
       Order: findTask.Order,
       Cost: task.cost,
       Visibility: task.visibility ? 1 : 0,
+      DefaultFragmentShader: task.useDefaultFragmentShader ? 1 : 0,
       CreatedBy: findTask.CreatedBy,
       Animated: task.animated ? 1 : 0,
       AnimationSteps: task.animationSteps,
@@ -92,6 +98,10 @@ class TaskService {
     await amazonFileStorage.save(`Tasks/${task.id}`, 'vertex.glsl', task.vertexShader);
     await amazonFileStorage.save(`Tasks/${task.id}`, 'fragment.glsl', task.fragmentShader);
     await amazonFileStorage.save(`Tasks/${task.id}`, 'description.md', task.description);
+
+    if (task.useDefaultFragmentShader) {
+      await amazonFileStorage.save(`Tasks/${task.id}`, 'default-fragment.glsl', task.defaultFragmentShader || '');
+    }
 
     const oldChannels = await taskRepository.getTaskChannels(task.id);
     const newChannels = task.channels || [];
@@ -141,6 +151,11 @@ class TaskService {
     const fragmentBuffer = await amazonFileStorage.get(`Tasks/${task.Id}`, 'fragment.glsl');
     const descriptionBuffer = await amazonFileStorage.get(`Tasks/${task.Id}`, 'description.md');
 
+    let defaultFragmentBuffer = null;
+    if (task.DefaultFragmentShader == 1) {
+      defaultFragmentBuffer = await amazonFileStorage.get(`Tasks/${task.Id}`, 'default-fragment.glsl');
+    }
+
     const user = await userRepository.findUserById(task.CreatedBy);
     const channels = await taskRepository.getTaskChannels(task.Id);
 
@@ -150,6 +165,8 @@ class TaskService {
       name: task.Name,
       vertexShader: vertexBuffer ? vertexBuffer.toString() : '',
       fragmentShader: fragmentBuffer ? fragmentBuffer.toString() : '',
+      useDefaultFragmentShader: task.DefaultFragmentShader == 1,
+      defaultFragmentShader: defaultFragmentBuffer ? defaultFragmentBuffer.toString() : '',
       description: descriptionBuffer ? descriptionBuffer.toString() : '',
       hints: [],
       restrictions: [],
@@ -256,7 +273,7 @@ class TaskService {
     return {
       task,
       vertexShader: vertexBuffer ? vertexBuffer.toString() : null,
-      fragmentShader: fragmentBuffer ? fragmentBuffer.toString() : null,
+      fragmentShader: fragmentBuffer ? fragmentBuffer.toString() : task.defaultFragmentShader,
       liked: userTask?.Liked === 1,
       disliked: userTask?.Liked === 0,
     };

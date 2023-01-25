@@ -32,8 +32,8 @@ export class TaskRepository {
     try {
       const result = await dbConnection.query(
         `
-        INSERT INTO Tasks (Name, Threshold, \`Order\`, Cost, Visibility, Module_Id, CreatedBy, Animated, AnimationSteps, AnimationStepTime)
-        VALUES (:Name, :Threshold, :Order, :Cost, :Visibility, :Module_Id, :CreatedBy, :Animated, :AnimationSteps, :AnimationStepTime);
+        INSERT INTO Tasks (Name, Threshold, \`Order\`, Cost, Visibility, DefaultFragmentShader, Module_Id, CreatedBy, Animated, AnimationSteps, AnimationStepTime)
+        VALUES (:Name, :Threshold, :Order, :Cost, :Visibility, :DefaultFragmentShader, :Module_Id, :CreatedBy, :Animated, :AnimationSteps, :AnimationStepTime);
       `,
         { ...task },
       );
@@ -57,6 +57,7 @@ export class TaskRepository {
           \`Order\` = :Order,
           Cost = :Cost,
           Visibility = :Visibility,
+          DefaultFragmentShader = :DefaultFragmentShader,
           Animated = :Animated,
           AnimationSteps = :AnimationSteps,
           AnimationStepTime = :AnimationStepTime
