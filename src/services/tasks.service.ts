@@ -249,9 +249,6 @@ class TaskService {
     }
 
     const userTask: UserTaskModel = await taskRepository.findUserTask(userId, taskId);
-    if (userTask == null) {
-      throw new HttpException(404, `User Task doesn't exist | userId=${userId}, taskId=${taskId}`);
-    }
 
     const vertexBuffer = await amazonFileStorage.get(`Users/${userId}/tasks/${taskId}`, 'vertex.glsl');
     const fragmentBuffer = await amazonFileStorage.get(`Users/${userId}/tasks/${taskId}`, 'fragment.glsl');
