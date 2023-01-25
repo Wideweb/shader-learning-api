@@ -33,7 +33,7 @@ export interface UserTaskModel {
   Score: number;
   Accepted: 0 | 1;
   Rejected: 0 | 1;
-  Liked?: boolean | null;
+  Liked?: 0 | 1 | null;
 }
 
 export interface UserTaskResultModel {
