@@ -37,23 +37,21 @@ class TaskService {
       Order: order,
       Cost: task.cost,
       Visibility: task.visibility ? 1 : 0,
-      DefaultFragmentShader: task.useDefaultFragmentShader ? 1 : 0,
       CreatedBy: userId,
       Animated: task.animated ? 1 : 0,
       AnimationSteps: task.animationSteps,
       AnimationStepTime: task.animationStepTime,
+      Data: {
+        vertexShader: task.vertexShader,
+        fragmentShader: task.fragmentShader,
+        defaultVertexShader: task.vertexShader,
+        defaultFragmentShader: task.defaultFragmentShader,
+        description: task.description,
+      },
     });
 
     if (taskId < 0) {
       throw new HttpException(500, 'Task create error');
-    }
-
-    await amazonFileStorage.save(`Tasks/${taskId}`, 'vertex.glsl', task.vertexShader);
-    await amazonFileStorage.save(`Tasks/${taskId}`, 'fragment.glsl', task.fragmentShader);
-    await amazonFileStorage.save(`Tasks/${taskId}`, 'description.md', task.description);
-
-    if (task.useDefaultFragmentShader) {
-      await amazonFileStorage.save(`Tasks/${taskId}`, 'default-fragment.glsl', task.defaultFragmentShader || '');
     }
 
     const channels = task.channels || [];
@@ -84,23 +82,21 @@ class TaskService {
       Order: findTask.Order,
       Cost: task.cost,
       Visibility: task.visibility ? 1 : 0,
-      DefaultFragmentShader: task.useDefaultFragmentShader ? 1 : 0,
       CreatedBy: findTask.CreatedBy,
       Animated: task.animated ? 1 : 0,
       AnimationSteps: task.animationSteps,
       AnimationStepTime: task.animationStepTime,
+      Data: {
+        vertexShader: task.vertexShader,
+        fragmentShader: task.fragmentShader,
+        defaultVertexShader: task.vertexShader,
+        defaultFragmentShader: task.defaultFragmentShader,
+        description: task.description,
+      },
     });
 
     if (!result) {
       throw new HttpException(500, 'Task update error');
-    }
-
-    await amazonFileStorage.save(`Tasks/${task.id}`, 'vertex.glsl', task.vertexShader);
-    await amazonFileStorage.save(`Tasks/${task.id}`, 'fragment.glsl', task.fragmentShader);
-    await amazonFileStorage.save(`Tasks/${task.id}`, 'description.md', task.description);
-
-    if (task.useDefaultFragmentShader) {
-      await amazonFileStorage.save(`Tasks/${task.id}`, 'default-fragment.glsl', task.defaultFragmentShader || '');
     }
 
     const oldChannels = await taskRepository.getTaskChannels(task.id);
@@ -147,15 +143,6 @@ class TaskService {
     const likes = await this.getLikesNumber(id);
     const dislikes = await this.getDislikesNumber(id);
 
-    const vertexBuffer = await amazonFileStorage.get(`Tasks/${task.Id}`, 'vertex.glsl');
-    const fragmentBuffer = await amazonFileStorage.get(`Tasks/${task.Id}`, 'fragment.glsl');
-    const descriptionBuffer = await amazonFileStorage.get(`Tasks/${task.Id}`, 'description.md');
-
-    let defaultFragmentBuffer = null;
-    if (task.DefaultFragmentShader == 1) {
-      defaultFragmentBuffer = await amazonFileStorage.get(`Tasks/${task.Id}`, 'default-fragment.glsl');
-    }
-
     const user = await userRepository.findUserById(task.CreatedBy);
     const channels = await taskRepository.getTaskChannels(task.Id);
 
@@ -163,11 +150,11 @@ class TaskService {
       id: task.Id,
       moduleId: task.Module_Id,
       name: task.Name,
-      vertexShader: vertexBuffer ? vertexBuffer.toString() : '',
-      fragmentShader: fragmentBuffer ? fragmentBuffer.toString() : '',
-      useDefaultFragmentShader: task.DefaultFragmentShader == 1,
-      defaultFragmentShader: defaultFragmentBuffer ? defaultFragmentBuffer.toString() : '',
-      description: descriptionBuffer ? descriptionBuffer.toString() : '',
+      vertexShader: task.Data?.vertexShader,
+      fragmentShader: task.Data?.fragmentShader,
+      defaultVertexShader: task.Data?.defaultVertexShader,
+      defaultFragmentShader: task.Data?.defaultFragmentShader,
+      description: task.Data?.description,
       hints: [],
       restrictions: [],
       order: task.Order,
@@ -267,13 +254,10 @@ class TaskService {
 
     const userTask: UserTaskModel = await taskRepository.findUserTask(userId, taskId);
 
-    const vertexBuffer = await amazonFileStorage.get(`Users/${userId}/tasks/${taskId}`, 'vertex.glsl');
-    const fragmentBuffer = await amazonFileStorage.get(`Users/${userId}/tasks/${taskId}`, 'fragment.glsl');
-
     return {
       task,
-      vertexShader: vertexBuffer ? vertexBuffer.toString() : null,
-      fragmentShader: fragmentBuffer ? fragmentBuffer.toString() : task.defaultFragmentShader,
+      vertexShader: userTask?.Data?.vertexShader || task.defaultVertexShader,
+      fragmentShader: userTask?.Data?.fragmentShader || task.defaultFragmentShader,
       liked: userTask?.Liked === 1,
       disliked: userTask?.Liked === 0,
     };
@@ -359,6 +343,10 @@ class TaskService {
       Score: score,
       Accepted: accepted ? 1 : 0,
       Rejected: accepted ? 0 : 1,
+      Data: {
+        vertexShader,
+        fragmentShader,
+      },
     };
 
     const userTask = await taskRepository.findUserTask(userId, taskId);
@@ -369,9 +357,6 @@ class TaskService {
     } else {
       saved = await taskRepository.createUserTask(userTaskToSave);
     }
-
-    await amazonFileStorage.save(`Users/${userId}/tasks/${taskId}`, 'vertex.glsl', vertexShader);
-    await amazonFileStorage.save(`Users/${userId}/tasks/${taskId}`, 'fragment.glsl', fragmentShader);
 
     if (!saved) {
       throw new HttpException(500, 'Task submition is not saved');
@@ -394,6 +379,7 @@ class TaskService {
         Score: 0,
         Accepted: 0,
         Rejected: 0,
+        Data: null,
       });
     }
 
@@ -409,6 +395,7 @@ class TaskService {
         Score: 0,
         Accepted: 0,
         Rejected: 0,
+        Data: null,
       });
     }
 

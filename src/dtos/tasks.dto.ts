@@ -11,7 +11,7 @@ export class TaskDto {
 
   fragmentShader: string;
 
-  useDefaultFragmentShader: boolean;
+  defaultVertexShader: string | null;
 
   defaultFragmentShader: string | null;
 
@@ -61,10 +61,6 @@ export class CreateTaskDto {
   @IsString()
   fragmentShader: string;
 
-  @IsBoolean()
-  useDefaultFragmentShader: boolean;
-
-  @IsOptional()
   @IsString()
   defaultFragmentShader: string | null;
 

@@ -1,8 +1,64 @@
 import { logger } from '@/utils/logger';
 import dbConnection from './db-connection';
-import { TaskChannelModel, TaskListModel, TaskModel, UserTaskModel, UserTaskResultModel } from './models/task.model';
+import {
+  TaskChannelModel,
+  TaskDataModel,
+  TaskListModel,
+  TaskModel,
+  UserTaskDataModel,
+  UserTaskModel,
+  UserTaskResultModel,
+} from './models/task.model';
 
 export class TaskRepository {
+  public async getAll(): Promise<TaskModel[]> {
+    const result = await dbConnection.query<TaskModel>(`SELECT * FROM Tasks`);
+    return result;
+  }
+
+  public async updateData(taskId: number, data: TaskDataModel): Promise<boolean> {
+    try {
+      await dbConnection.query(
+        `
+        UPDATE Tasks
+        SET 
+          Data = :Data
+        WHERE 
+          Id = ${taskId};
+      `,
+        { Data: JSON.stringify(data) },
+      );
+      return true;
+    } catch (err) {
+      logger.error(`DB: Failed to update task | taskId:${taskId}`);
+      return false;
+    }
+  }
+
+  public async getAllUserTasks(): Promise<UserTaskModel[]> {
+    const result = await dbConnection.query<TaskModel>(`SELECT * FROM UserTask`);
+    return result;
+  }
+
+  public async updateUserTaskData(userId: number, taskId: number, data: UserTaskDataModel): Promise<boolean> {
+    try {
+      await dbConnection.query(
+        `
+        UPDATE UserTask
+        SET 
+          Data = :Data
+        WHERE 
+          User_Id = ${userId} AND Task_Id = ${taskId};
+      `,
+        { Data: JSON.stringify(data) },
+      );
+      return true;
+    } catch (err) {
+      logger.error(`DB: Failed to update user task | userId:${userId}; taskId:${taskId}`);
+      return false;
+    }
+  }
+
   public async findById(id: number): Promise<TaskModel> {
     const result = await dbConnection.query<TaskModel>(`SELECT * FROM Tasks WHERE Id = :id LIMIT 1`, { id });
     return result[0];
@@ -32,10 +88,10 @@ export class TaskRepository {
     try {
       const result = await dbConnection.query(
         `
-        INSERT INTO Tasks (Name, Threshold, \`Order\`, Cost, Visibility, DefaultFragmentShader, Module_Id, CreatedBy, Animated, AnimationSteps, AnimationStepTime)
-        VALUES (:Name, :Threshold, :Order, :Cost, :Visibility, :DefaultFragmentShader, :Module_Id, :CreatedBy, :Animated, :AnimationSteps, :AnimationStepTime);
+        INSERT INTO Tasks (Name, Threshold, \`Order\`, Cost, Visibility, Module_Id, CreatedBy, Animated, AnimationSteps, AnimationStepTime, Data)
+        VALUES (:Name, :Threshold, :Order, :Cost, :Visibility, :Module_Id, :CreatedBy, :Animated, :AnimationSteps, :AnimationStepTime, :Data);
       `,
-        { ...task },
+        { ...task, Data: JSON.stringify(task.Data) },
       );
       return result.insertId;
     } catch (err) {
@@ -57,14 +113,14 @@ export class TaskRepository {
           \`Order\` = :Order,
           Cost = :Cost,
           Visibility = :Visibility,
-          DefaultFragmentShader = :DefaultFragmentShader,
           Animated = :Animated,
           AnimationSteps = :AnimationSteps,
-          AnimationStepTime = :AnimationStepTime
+          AnimationStepTime = :AnimationStepTime,
+          Data = :Data
         WHERE 
           Id = ${task.Id};
       `,
-        { ...task },
+        { ...task, Data: JSON.stringify(task.Data) },
       );
       return true;
     } catch (err) {
@@ -172,10 +228,10 @@ export class TaskRepository {
     try {
       await dbConnection.query(
         `
-          INSERT INTO UserTask (User_Id, Task_Id, Score, Accepted, Rejected)
-          VALUES (:User_Id, :Task_Id, :Score, :Accepted, :Rejected);
+          INSERT INTO UserTask (User_Id, Task_Id, Score, Accepted, Rejected, Data)
+          VALUES (:User_Id, :Task_Id, :Score, :Accepted, :Rejected, :Data);
       `,
-        { ...task },
+        { ...task, Data: JSON.stringify(task.Data) },
       );
       return true;
     } catch {
@@ -189,11 +245,11 @@ export class TaskRepository {
         `
           UPDATE UserTask
           SET 
-            Score = :Score, Accepted = :Accepted, Rejected = :Rejected
+            Score = :Score, Accepted = :Accepted, Rejected = :Rejected, Data = :Data
           WHERE 
             User_Id = :User_Id AND Task_Id = :Task_Id;
       `,
-        { ...task },
+        { ...task, Data: JSON.stringify(task.Data) },
       );
       return true;
     } catch {

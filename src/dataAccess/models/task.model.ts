@@ -6,11 +6,19 @@ export interface TaskModel {
   Order: number;
   Cost: number;
   Visibility: 0 | 1;
-  DefaultFragmentShader: 0 | 1;
   CreatedBy: number;
   Animated: 0 | 1;
   AnimationSteps: number;
   AnimationStepTime: number;
+  Data: TaskDataModel;
+}
+
+export interface TaskDataModel {
+  vertexShader: string;
+  fragmentShader: string;
+  defaultVertexShader: string;
+  defaultFragmentShader: string;
+  description: string;
 }
 
 export interface TaskChannelModel {
@@ -35,6 +43,12 @@ export interface UserTaskModel {
   Accepted: 0 | 1;
   Rejected: 0 | 1;
   Liked?: 0 | 1 | null;
+  Data: UserTaskDataModel;
+}
+
+export interface UserTaskDataModel {
+  vertexShader: string;
+  fragmentShader: string;
 }
 
 export interface UserTaskResultModel {

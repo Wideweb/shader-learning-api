@@ -67,12 +67,12 @@ CREATE TABLE `Tasks`(
     `Order` INT NOT NULL,
     `Cost` INT NOT NULL,
 	`Visibility` TINYINT DEFAULT 1,
-	`DefaultFragmentShader` TINYINT DEFAULT 0,
 	`CreatedBy` INT NOT NULL,
 	`Module_Id` INT NOT NULL,
 	`Animated` TINYINT DEFAULT 0,
 	`AnimationSteps` INT DEFAULT NULL,
 	`AnimationStepTime` INT DEFAULT NULL,
+	`Data` JSON
 
 	PRIMARY KEY (`Id`),
 	FOREIGN KEY (`Module_Id`) REFERENCES `Modules`(`Id`),
@@ -100,6 +100,7 @@ CREATE TABLE `UserTask`(
     `Accepted` TINYINT DEFAULT 0,
     `Rejected` TINYINT DEFAULT 0,
 	`Liked` TINYINT DEFAULT NULL,
+	`Data` JSON
 
 	PRIMARY KEY (`User_Id`, `Task_Id`) ,
 	FOREIGN KEY (`User_Id`) REFERENCES `Users`(`Id`),
