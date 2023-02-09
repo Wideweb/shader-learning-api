@@ -198,3 +198,17 @@ export interface TaskListDto {
 
   visibility: boolean;
 }
+
+export class TaskFeedbackDto {
+  @IsBoolean()
+  unclearDescription: false;
+
+  @IsBoolean()
+  strictRuntime: false;
+
+  @IsBoolean()
+  other: false;
+
+  @IsString()
+  message: string;
+}

@@ -61,3 +61,12 @@ export interface UserTaskResultModel {
   Accepted: 0 | 1;
   Rejected: 0 | 1;
 }
+
+export interface TaskFeedbackModel {
+  User_Id: number;
+  Task_Id: number;
+  UnclearDescription: 0 | 1;
+  StrictRuntime: 0 | 1;
+  Other: 0 | 1;
+  Message: string;
+}
