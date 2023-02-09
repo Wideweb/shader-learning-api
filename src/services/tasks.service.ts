@@ -10,6 +10,7 @@ import {
   CreateTaskDto,
   UpdateTaskDto,
   TaskListDto,
+  TaskFeedbackDto,
 } from '@dtos/tasks.dto';
 import glService from './gl.service';
 import taskRepository from '@dataAccess/tasks.repository';
@@ -408,6 +409,17 @@ class TaskService {
 
   public async getDislikesNumber(taskId: number): Promise<number> {
     return await taskRepository.getDislikes(taskId);
+  }
+
+  public async saveFeedback(userId: number, taskId: number, feedback: TaskFeedbackDto): Promise<boolean> {
+    return await taskRepository.saveFeedback({
+      User_Id: userId,
+      Task_Id: taskId,
+      UnclearDescription: feedback.unclearDescription ? 1 : 0,
+      StrictRuntime: feedback.strictRuntime ? 1 : 0,
+      Other: feedback.other ? 1 : 0,
+      Message: feedback.message,
+    });
   }
 }
 

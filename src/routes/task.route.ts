@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { Routes } from '@interfaces/routes.interface';
 import validationMiddleware from '@middlewares/validation.middleware';
 import TasksController from '@controllers/task.controller';
-import { CreateTaskDto, TaskSubmitDto, TaskSubmitWithValidationDto, UpdateTaskDto } from '@dtos/tasks.dto';
+import { CreateTaskDto, TaskFeedbackDto, TaskSubmitDto, TaskSubmitWithValidationDto, UpdateTaskDto } from '@dtos/tasks.dto';
 import { hasAllPermissions } from '@/middlewares/auth.middleware';
 
 class TasksRoute implements Routes {
@@ -56,6 +56,13 @@ class TasksRoute implements Routes {
     );
 
     this.router.get(`${this.path}/score`, hasAllPermissions(['task_submit']), this.tasksController.getScore);
+
+    this.router.post(
+      `${this.path}/:id/feedback`,
+      hasAllPermissions(['task_submit']),
+      validationMiddleware(TaskFeedbackDto, 'body'),
+      this.tasksController.feedback,
+    );
   }
 }
 

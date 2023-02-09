@@ -3,6 +3,7 @@ import dbConnection from './db-connection';
 import {
   TaskChannelModel,
   TaskDataModel,
+  TaskFeedbackModel,
   TaskListModel,
   TaskModel,
   UserTaskDataModel,
@@ -381,6 +382,22 @@ export class TaskRepository {
       { userId },
     );
     return result[0]['UserScore'] || 0;
+  }
+
+  public async saveFeedback(feedback: TaskFeedbackModel): Promise<boolean> {
+    try {
+      await dbConnection.query(
+        `
+        INSERT INTO TaskFeedback (User_Id, Task_Id, UnclearDescription, StrictRuntime, Other, Message)
+        VALUES (:User_Id, :Task_Id, :UnclearDescription, :StrictRuntime, :Other, :Message);
+      `,
+        { ...feedback },
+      );
+      return true;
+    } catch (err) {
+      logger.error(`DB: Failed to save feedback | User:${feedback.User_Id}, Task:${feedback.Task_Id}, error:${err.message}`);
+      return false;
+    }
   }
 }
 

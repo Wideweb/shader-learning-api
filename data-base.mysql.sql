@@ -80,6 +80,22 @@ CREATE TABLE `Tasks`(
 )
 
 /*
+TASK FEEDBACK
+*/
+CREATE TABLE `TaskFeedback`(
+    `User_Id` INT NOT NULL,
+    `Task_Id` INT NOT NULL,
+    `UnclearDescription` TINYINT DEFAULT 0,
+    `StrictRuntime` TINYINT DEFAULT 0,
+	`Other` TINYINT DEFAULT 0,
+	`Message` TEXT DEFAULT NULL,
+
+	FOREIGN KEY (`User_Id`) REFERENCES `Users`(`Id`),
+	FOREIGN KEY (`Task_Id`) REFERENCES `Tasks`(`Id`)
+)
+
+
+/*
 TASK CHANNEL
 */
 CREATE TABLE `TaskChannels`(

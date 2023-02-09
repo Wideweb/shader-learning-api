@@ -2,6 +2,7 @@ import { NextFunction, Response } from 'express';
 import {
   CreateTaskDto,
   TaskDto,
+  TaskFeedbackDto,
   TaskListDto,
   TaskSubmitDto,
   TaskSubmitResultDto,
@@ -167,6 +168,19 @@ class TasksController {
       const score: number = await taskService.getUserScore(userData.id);
 
       res.status(200).json(score);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public feedback = async (req: RequestWithUser, res: Response, next: NextFunction) => {
+    try {
+      const userData: User = req.user;
+      const taskId: number = parseInt(req.params.id);
+      const feedback: TaskFeedbackDto = req.body;
+
+      await taskService.saveFeedback(userData.id, taskId, feedback);
+      res.status(200).json(true);
     } catch (error) {
       next(error);
     }
