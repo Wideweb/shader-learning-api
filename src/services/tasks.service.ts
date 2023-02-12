@@ -259,6 +259,7 @@ class TaskService {
       task,
       vertexShader: userTask?.Data?.vertexShader || task.defaultVertexShader,
       fragmentShader: userTask?.Data?.fragmentShader || task.defaultFragmentShader,
+      defaultFragmentShader: task.defaultFragmentShader,
       liked: userTask?.Liked === 1,
       disliked: userTask?.Liked === 0,
     };
