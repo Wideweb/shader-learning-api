@@ -158,6 +158,8 @@ export class UserTaskDto {
 
   fragmentShader: string;
 
+  defaultFragmentShader: string;
+
   liked: boolean;
 
   disliked: boolean;
