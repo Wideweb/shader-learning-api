@@ -44,6 +44,16 @@ export interface UserTaskModel {
   Rejected: 0 | 1;
   Liked?: 0 | 1 | null;
   Data: UserTaskDataModel;
+  AcceptedAt: Date | null;
+}
+
+export interface UserTaskSubmissionModel {
+  User_Id: number;
+  Task_Id: number;
+  Score: number;
+  Accepted: 0 | 1;
+  Data: UserTaskDataModel;
+  At: Date;
 }
 
 export interface UserTaskDataModel {

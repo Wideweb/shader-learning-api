@@ -14,13 +14,14 @@ import {
 } from '@dtos/tasks.dto';
 import glService from './gl.service';
 import taskRepository from '@dataAccess/tasks.repository';
-import { TaskModel, UserTaskModel } from '@dataAccess/models/task.model';
+import { TaskModel, UserTaskModel, UserTaskSubmissionModel } from '@dataAccess/models/task.model';
 import { logger } from '@utils/logger';
 import { User } from '@/interfaces/users.interface';
 import amazonFileStorage from './amazonFileStorage';
 import { TaskNameNotUniqueException } from '@/exceptions/TaskNameNotUniqueException';
 import userRepository from '@/dataAccess/users.repository';
 import tempStorage from './tempStorage';
+import { Utils } from './utils';
 
 class TaskService {
   public async createTask(task: CreateTaskDto, userId: number): Promise<number> {
@@ -254,6 +255,7 @@ class TaskService {
     }
 
     const userTask: UserTaskModel = await taskRepository.findUserTask(userId, taskId);
+    const submissions: UserTaskSubmissionModel[] = await taskRepository.getUserTaskSubmissions(userId, taskId);
 
     return {
       task,
@@ -262,6 +264,12 @@ class TaskService {
       defaultFragmentShader: task.defaultFragmentShader,
       liked: userTask?.Liked === 1,
       disliked: userTask?.Liked === 0,
+      submissions: submissions.map(it => ({
+        score: it.Score,
+        accepted: it.Accepted == 1,
+        fragmentShader: it.Data.fragmentShader,
+        at: it.At,
+      })),
     };
   }
 
@@ -309,25 +317,51 @@ class TaskService {
     if (isEmpty(taskSubmitData) || isEmpty(taskSubmitData.fragmentShader)) throw new HttpException(400, 'Task data is empty');
 
     const task = await this.getTask(taskSubmitData.id);
-    let score = Math.round(taskSubmitData.match * task.cost);
+    const score = Math.round(taskSubmitData.match * task.cost);
     const match = taskSubmitData.match;
     const accepted = match * 100 >= task.threshold;
-    const result: TaskSubmitResultDto = { accepted, score, match };
+    const at = new Date();
+
+    const userTaskToSave: UserTaskModel = {
+      User_Id: user.id,
+      Task_Id: task.id,
+      Score: score,
+      Accepted: accepted ? 1 : 0,
+      Rejected: accepted ? 0 : 1,
+      Data: {
+        vertexShader: taskSubmitData.vertexShader,
+        fragmentShader: taskSubmitData.fragmentShader,
+      },
+      AcceptedAt: accepted ? Utils.asUTC(at) : null,
+    };
 
     const userTask = await taskRepository.findUserTask(user.id, task.id);
-    if (userTask) {
-      score = Math.max(result.score, userTask.Score);
+    if (!!userTask && userTask.Accepted) {
+      userTaskToSave.Score = Math.max(score, userTask.Score);
+      userTaskToSave.Accepted = 1;
+      userTaskToSave.Rejected = 0;
+      userTaskToSave.AcceptedAt = userTask.AcceptedAt;
     }
 
-    await this.setTaskSubmitionResult(
-      user.id,
-      task.id,
-      score,
-      accepted || (!!userTask && userTask.Accepted == 1),
-      taskSubmitData.vertexShader,
-      taskSubmitData.fragmentShader,
-    );
+    await taskRepository.saveUserTaskSubmission({
+      User_Id: user.id,
+      Task_Id: task.id,
+      Score: score,
+      Accepted: accepted ? 1 : 0,
+      Data: {
+        vertexShader: taskSubmitData.vertexShader,
+        fragmentShader: taskSubmitData.fragmentShader,
+      },
+      At: Utils.asUTC(at),
+    });
 
+    if (userTask) {
+      await taskRepository.updateUserTask(userTaskToSave);
+    } else {
+      await taskRepository.createUserTask(userTaskToSave);
+    }
+
+    const result: TaskSubmitResultDto = { accepted, score, match, at, fragmentShader: taskSubmitData.fragmentShader };
     return result;
   }
 
@@ -349,6 +383,7 @@ class TaskService {
         vertexShader,
         fragmentShader,
       },
+      AcceptedAt: accepted ? Utils.getUTC() : null,
     };
 
     const userTask = await taskRepository.findUserTask(userId, taskId);
@@ -359,6 +394,18 @@ class TaskService {
     } else {
       saved = await taskRepository.createUserTask(userTaskToSave);
     }
+
+    await taskRepository.saveUserTaskSubmission({
+      User_Id: userId,
+      Task_Id: taskId,
+      Score: score,
+      Accepted: accepted ? 1 : 0,
+      Data: {
+        vertexShader,
+        fragmentShader,
+      },
+      At: Utils.getUTC(),
+    });
 
     if (!saved) {
       throw new HttpException(500, 'Task submition is not saved');
@@ -382,6 +429,7 @@ class TaskService {
         Accepted: 0,
         Rejected: 0,
         Data: null,
+        AcceptedAt: null,
       });
     }
 
@@ -398,6 +446,7 @@ class TaskService {
         Accepted: 0,
         Rejected: 0,
         Data: null,
+        AcceptedAt: null,
       });
     }
 

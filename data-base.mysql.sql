@@ -117,8 +117,21 @@ CREATE TABLE `UserTask`(
     `Rejected` TINYINT DEFAULT 0,
 	`Liked` TINYINT DEFAULT NULL,
 	`Data` JSON
+	`AcceptedAt` DATETIME,
 
 	PRIMARY KEY (`User_Id`, `Task_Id`) ,
+	FOREIGN KEY (`User_Id`) REFERENCES `Users`(`Id`),
+	FOREIGN KEY (`Task_Id`) REFERENCES `Tasks`(`Id`)
+)
+
+CREATE TABLE `UserTaskSubmissions`(
+    `User_Id` INT NOT NULL,
+    `Task_Id` INT NOT NULL,
+    `Score` INT NOT NULL,
+    `Accepted` TINYINT NOT NULL,
+	`Data` JSON,
+	`At` DATETIME,
+
 	FOREIGN KEY (`User_Id`) REFERENCES `Users`(`Id`),
 	FOREIGN KEY (`Task_Id`) REFERENCES `Tasks`(`Id`)
 )
