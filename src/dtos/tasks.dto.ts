@@ -124,6 +124,10 @@ export class TaskSubmitResultDto {
   score: number;
 
   accepted: boolean;
+
+  fragmentShader: string;
+
+  at: Date;
 }
 
 export class TaskSubmitWithValidationDto {
@@ -163,6 +167,18 @@ export class UserTaskDto {
   liked: boolean;
 
   disliked: boolean;
+
+  submissions: UserTaskSubmissionDto[];
+}
+
+export class UserTaskSubmissionDto {
+  score: number;
+
+  accepted: boolean;
+
+  fragmentShader: string;
+
+  at: Date;
 }
 
 export class UserTaskResultDto {

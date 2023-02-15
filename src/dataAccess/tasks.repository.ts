@@ -1,3 +1,4 @@
+import { Utils } from '@/services/utils';
 import { logger } from '@/utils/logger';
 import dbConnection from './db-connection';
 import {
@@ -9,6 +10,7 @@ import {
   UserTaskDataModel,
   UserTaskModel,
   UserTaskResultModel,
+  UserTaskSubmissionModel,
 } from './models/task.model';
 
 export class TaskRepository {
@@ -246,9 +248,24 @@ export class TaskRepository {
         `
           UPDATE UserTask
           SET 
-            Score = :Score, Accepted = :Accepted, Rejected = :Rejected, Data = :Data
+            Score = :Score, Accepted = :Accepted, Rejected = :Rejected, Data = :Data, AcceptedAt = :AcceptedAt
           WHERE 
             User_Id = :User_Id AND Task_Id = :Task_Id;
+      `,
+        { ...task, Data: JSON.stringify(task.Data) },
+      );
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  public async saveUserTaskSubmission(task: UserTaskSubmissionModel): Promise<boolean> {
+    try {
+      await dbConnection.query(
+        `
+          INSERT INTO UserTaskSubmissions (User_Id, Task_Id, Score, Accepted, Data, At)
+          VALUES (:User_Id, :Task_Id, :Score, :Accepted, :Data, :At);
       `,
         { ...task, Data: JSON.stringify(task.Data) },
       );
@@ -297,7 +314,23 @@ export class TaskRepository {
     `,
       { userId, taskId },
     );
-    return result[0];
+    return result[0] && result[0].At ? { ...result[0], AcceptedAt: Utils.addTimezoneOffset(result[0].At) } : result[0];
+  }
+
+  public async getUserTaskSubmissions(userId: number, taskId: number): Promise<UserTaskSubmissionModel[]> {
+    const result = await dbConnection.query<UserTaskSubmissionModel[]>(
+      `
+      SELECT *
+      FROM
+        UserTaskSubmissions
+      WHERE
+        UserTaskSubmissions.User_Id = :userId AND UserTaskSubmissions.Task_Id = :taskId
+      ORDER BY
+        UserTaskSubmissions.At DESC
+    `,
+      { userId, taskId },
+    );
+    return (result || []).map(it => ({ ...it, At: Utils.addTimezoneOffset(it.At) }));
   }
 
   public async getUserTaskResults(userId: number): Promise<UserTaskResultModel[]> {
