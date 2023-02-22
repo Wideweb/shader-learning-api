@@ -6,7 +6,14 @@ export interface UserModel {
   PasswordSalt: string;
   FailedLoginAttemptsCount: number;
   Role_Id: number;
+}
+
+export interface UserSessionModel {
+  Id: number;
+  User_Id: number;
   RefreshToken: string;
+  StartedAt: Date;
+  FinishedAt: Date;
 }
 
 export interface UserRankedListModel {

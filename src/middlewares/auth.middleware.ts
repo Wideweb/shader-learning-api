@@ -60,6 +60,7 @@ const permissionMiddleware = (permissions: string[], all: boolean) => async (req
     }
 
     req.user = findUser;
+    req.sessionId = tokenData.sessionId;
     next();
   } catch (error) {
     if (hasDefaultPermissions) {

@@ -29,7 +29,6 @@ CREATE TABLE `Users`(
 	`Password` TEXT NOT NULL,
 	`FailedLoginAttemptsCount` INT NOT NULL,
 	`Role_Id` INT NOT NULL,
-	`RefreshToken` TEXT NULL,
 
 	PRIMARY KEY (`Id`),
 	FOREIGN KEY (`Role_Id`) REFERENCES `Roles`(`Id`)
@@ -41,6 +40,20 @@ USER DATA
 INSERT INTO [dbo].[Users] ([UserName], [Email], [PasswordSalt], [Password], [FailedLoginAttemptsCount], [Role_Id])
 VALUES ('Admin', 'alckevich@live.con', '', '123456', 0, 1);
 GO
+
+/*
+USER SESSIONS
+*/
+CREATE TABLE `UserSessions`(
+	`Id` INT NOT NULL AUTO_INCREMENT,
+	`User_Id` INT NOT NULL,
+	`RefreshToken` TEXT NULL,
+	`StartedAt` DATETIME,
+	`FinishedAt` DATETIME,
+
+	PRIMARY KEY (`Id`),
+	FOREIGN KEY (`User_Id`) REFERENCES `Users`(`Id`)
+)
 
 /*
 MODULE
