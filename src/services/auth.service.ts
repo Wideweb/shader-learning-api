@@ -34,7 +34,6 @@ class AuthService {
       PasswordSalt: passwordSalt,
       FailedLoginAttemptsCount: 0,
       Role_Id: 2,
-      RefreshToken: null,
     });
 
     if (!isUserCreated) throw new HttpException(500, `User is not created`);
@@ -43,7 +42,7 @@ class AuthService {
     if (!createdUser) throw new HttpException(500, `User with Email ${userData.email} is not created`);
 
     const permissions = await this.getPermissions(createdUser.Id);
-    const tokenData = this.createToken(createdUser, permissions);
+    const tokenData = await this.createSession(createdUser, permissions);
 
     const user: User = {
       id: createdUser.Id,
@@ -66,7 +65,7 @@ class AuthService {
     if (!isPasswordMatching) throw new PasswordMatchException();
 
     const permissions = await this.getPermissions(findUser.Id);
-    const tokenData = this.createToken(findUser, permissions);
+    const tokenData = await this.createSession(findUser, permissions);
 
     const user: User = {
       id: findUser.Id,
@@ -79,13 +78,9 @@ class AuthService {
     return { tokenData, user };
   }
 
-  public async logout(userData: User): Promise<void> {
-    if (isEmpty(userData)) throw new HttpException(400, 'userData is empty');
-
-    const findUser: UserModel = await userRepository.findUserByName(userData.name);
-    if (!findUser) throw new UserNameNotFoundExcrption(userData.name);
-
-    userRepository.setRefreshToken(findUser.Id, null);
+  public async logout(sessionId: number): Promise<void> {
+    if (!sessionId) throw new HttpException(400, 'no user session');
+    userRepository.finishUserSession(sessionId);
   }
 
   public async decodeAccessToken(accessToken: string): Promise<DataStoredInToken> {
@@ -93,30 +88,13 @@ class AuthService {
     return tokenData;
   }
 
-  public async refreshAccessToken(refreshToken: string): Promise<{ token: string; expiresIn: number }> {
-    if (isEmpty(refreshToken)) {
-      throw new HttpException(400, 'invalid refreshToken');
-    }
+  private async createSession(user: UserModel, permissions: string[]): Promise<TokenData> {
+    const sessionId = await userRepository.createUserSession(user.Id, null);
 
-    const verificationResponse = (await verify(refreshToken, REFRESH_TOKEN_SECRET)) as DataStoredInToken;
-    const userId = verificationResponse.id;
-    const findUser = await userRepository.findUserById(userId);
+    const accessToken = this.createAccessToken(user, permissions, sessionId);
+    const refreshToken = this.createRefreshToken(user, sessionId);
 
-    if (isEmpty(findUser) || findUser.RefreshToken != refreshToken) {
-      throw new HttpException(400, 'invalid refreshToken');
-    }
-
-    const permissions = await this.getPermissions(userId);
-
-    const accessToken = this.createAccessToken(findUser, permissions);
-    return accessToken;
-  }
-
-  private createToken(user: UserModel, permissions: string[]): TokenData {
-    const accessToken = this.createAccessToken(user, permissions);
-    const refreshToken = this.createRefreshToken(user);
-
-    userRepository.setRefreshToken(user.Id, refreshToken.token);
+    await userRepository.setRefreshToken(sessionId, refreshToken.token);
 
     return {
       accessToken: accessToken.token,
@@ -126,8 +104,33 @@ class AuthService {
     };
   }
 
-  private createAccessToken(user: UserModel, permissions: string[]): { token: string; expiresIn: number } {
-    const storedData: DataStoredInToken = { id: user.Id, permissions };
+  public async refreshAccessToken(refreshToken: string): Promise<{ token: string; expiresIn: number }> {
+    if (isEmpty(refreshToken)) {
+      throw new HttpException(400, 'invalid refreshToken');
+    }
+
+    const verificationResponse = (await verify(refreshToken, REFRESH_TOKEN_SECRET)) as DataStoredInToken;
+    const userId = verificationResponse.id;
+    const sessionId = verificationResponse.sessionId;
+    const findSession = await userRepository.findUserSession(sessionId);
+
+    if (isEmpty(findSession) || findSession.RefreshToken != refreshToken) {
+      throw new HttpException(400, 'invalid refreshToken');
+    }
+
+    if (findSession.FinishedAt != null) {
+      throw new HttpException(400, 'session is finished');
+    }
+
+    const findUser = await userRepository.findUserById(userId);
+    const permissions = await this.getPermissions(userId);
+
+    const accessToken = this.createAccessToken(findUser, permissions, sessionId);
+    return accessToken;
+  }
+
+  private createAccessToken(user: UserModel, permissions: string[], sessionId: number): { token: string; expiresIn: number } {
+    const storedData: DataStoredInToken = { id: user.Id, permissions, sessionId };
     const secret: string = ACCESS_TOKEN_SECRET;
     const expiresIn = Number.parseInt(ACCESS_TOKEN_LIFE);
 
@@ -137,8 +140,8 @@ class AuthService {
     };
   }
 
-  private createRefreshToken(user: UserModel): { token: string; expiresIn: number } {
-    const storedData: DataStoredInRefreshToken = { id: user.Id };
+  private createRefreshToken(user: UserModel, sessionId: number): { token: string; expiresIn: number } {
+    const storedData: DataStoredInRefreshToken = { id: user.Id, sessionId };
     const secret: string = REFRESH_TOKEN_SECRET;
     const expiresIn = Number.parseInt(REFRESH_TOKEN_LIFE);
 

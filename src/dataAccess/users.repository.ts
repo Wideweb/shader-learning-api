@@ -1,4 +1,6 @@
-import { UserModel, UserProfileModel, UserRankedListModel } from '@dataAccess/models/user.model';
+import { Utils } from '@/services/utils';
+import { logger } from '@/utils/logger';
+import { UserModel, UserProfileModel, UserRankedListModel, UserSessionModel } from '@dataAccess/models/user.model';
 import dbConnection from './db-connection';
 
 export class UserRepository {
@@ -32,17 +34,56 @@ export class UserRepository {
     }
   }
 
-  public async setRefreshToken(userId: number, token: string): Promise<boolean> {
+  public async createUserSession(userId: number, refreshToken: string): Promise<number> {
+    try {
+      const result = await dbConnection.query(
+        `
+        INSERT INTO UserSessions (User_id, RefreshToken, StartedAt)
+        VALUES (:userId, :refreshToken, :startedAt);
+      `,
+        { userId, refreshToken, startedAt: Utils.getUTC() },
+      );
+      return result.insertId;
+    } catch (err) {
+      logger.error(`DB: Failed to create session | userId:${userId}, refreshToken:${refreshToken}`);
+      return -1;
+    }
+  }
+
+  public async findUserSession(sessionId: number): Promise<UserSessionModel> {
+    const result = await dbConnection.query<UserModel>(`SELECT * FROM UserSessions WHERE Id = :sessionId LIMIT 1`, { sessionId });
+    return result[0];
+  }
+
+  public async setRefreshToken(sessionId: number, token: string): Promise<boolean> {
     try {
       await dbConnection.query(
         `
-        UPDATE Users
+        UPDATE UserSessions
         SET 
           RefreshToken = :token
         WHERE 
-          Id = :userId
+          Id = :sessionId
       `,
-        { token, userId },
+        { sessionId, token },
+      );
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  public async finishUserSession(sessionId: number): Promise<boolean> {
+    try {
+      await dbConnection.query(
+        `
+        UPDATE UserSessions
+        SET 
+          RefreshToken = :token, RefreshToken = :refreshToken, FinishedAt = :finishedAt
+        WHERE 
+          Id = :sessionId
+      `,
+        { sessionId, refreshToken: null, finishedAt: Utils.getUTC() },
       );
       return true;
     } catch {
