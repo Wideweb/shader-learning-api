@@ -85,7 +85,9 @@ CREATE TABLE `Tasks`(
 	`Animated` TINYINT DEFAULT 0,
 	`AnimationSteps` INT DEFAULT NULL,
 	`AnimationStepTime` INT DEFAULT NULL,
-	`Data` JSON
+	`Data` JSON,
+	`VertexCodeEditable` TINYINT DEFAULT 0,
+	`FragmentCodeEditable` TINYINT DEFAULT 1,
 
 	PRIMARY KEY (`Id`),
 	FOREIGN KEY (`Module_Id`) REFERENCES `Modules`(`Id`),

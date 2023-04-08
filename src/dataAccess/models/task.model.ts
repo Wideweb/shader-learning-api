@@ -11,6 +11,8 @@ export interface TaskModel {
   AnimationSteps: number;
   AnimationStepTime: number;
   Data: TaskDataModel;
+  VertexCodeEditable: 0 | 1;
+  FragmentCodeEditable: 0 | 1;
 }
 
 export interface TaskDataModel {
@@ -19,6 +21,7 @@ export interface TaskDataModel {
   defaultVertexShader: string;
   defaultFragmentShader: string;
   description: string;
+  sceneSettings: JSON;
 }
 
 export interface TaskChannelModel {

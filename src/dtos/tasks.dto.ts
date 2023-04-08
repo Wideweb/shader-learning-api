@@ -1,4 +1,4 @@
-import { IsArray, IsBoolean, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsBoolean, IsJSON, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class TaskDto {
   id: number;
@@ -14,6 +14,13 @@ export class TaskDto {
   defaultVertexShader: string | null;
 
   defaultFragmentShader: string | null;
+
+  vertexCodeEditable: boolean;
+
+  fragmentCodeEditable: boolean;
+
+  @IsJSON()
+  sceneSettings: JSON | null;
 
   description: string;
 
@@ -63,6 +70,18 @@ export class CreateTaskDto {
 
   @IsString()
   defaultFragmentShader: string | null;
+
+  @IsString()
+  defaultVertexShader: string | null;
+
+  @IsBoolean()
+  vertexCodeEditable: boolean;
+
+  @IsBoolean()
+  fragmentCodeEditable: boolean;
+
+  @IsJSON()
+  sceneSettings: JSON | null;
 
   @IsString()
   description: string;
@@ -161,6 +180,8 @@ export class UserTaskDto {
   vertexShader: string;
 
   fragmentShader: string;
+
+  defaultVertexShader: string;
 
   defaultFragmentShader: string;
 

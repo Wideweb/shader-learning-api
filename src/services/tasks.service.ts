@@ -5,14 +5,12 @@ import {
   UserTaskResultDto,
   TaskSubmitDto,
   TaskSubmitResultDto,
-  TaskSubmitWithValidationDto,
   UserTaskDto,
   CreateTaskDto,
   UpdateTaskDto,
   TaskListDto,
   TaskFeedbackDto,
 } from '@dtos/tasks.dto';
-import glService from './gl.service';
 import taskRepository from '@dataAccess/tasks.repository';
 import { TaskModel, UserTaskModel, UserTaskSubmissionModel } from '@dataAccess/models/task.model';
 import { logger } from '@utils/logger';
@@ -49,7 +47,10 @@ class TaskService {
         defaultVertexShader: task.vertexShader,
         defaultFragmentShader: task.defaultFragmentShader,
         description: task.description,
+        sceneSettings: task.sceneSettings,
       },
+      VertexCodeEditable: task.vertexCodeEditable ? 1 : 0,
+      FragmentCodeEditable: task.fragmentCodeEditable ? 1 : 0,
     });
 
     if (taskId < 0) {
@@ -94,7 +95,10 @@ class TaskService {
         defaultVertexShader: task.vertexShader,
         defaultFragmentShader: task.defaultFragmentShader,
         description: task.description,
+        sceneSettings: task.sceneSettings,
       },
+      VertexCodeEditable: task.vertexCodeEditable ? 1 : 0,
+      FragmentCodeEditable: task.fragmentCodeEditable ? 1 : 0,
     });
 
     if (!result) {
@@ -156,6 +160,9 @@ class TaskService {
       fragmentShader: task.Data?.fragmentShader,
       defaultVertexShader: task.Data?.defaultVertexShader,
       defaultFragmentShader: task.Data?.defaultFragmentShader,
+      vertexCodeEditable: task.VertexCodeEditable == 1,
+      fragmentCodeEditable: task.FragmentCodeEditable == 1,
+      sceneSettings: task.Data?.sceneSettings,
       description: task.Data?.description,
       hints: [],
       restrictions: [],
@@ -261,6 +268,7 @@ class TaskService {
       task,
       vertexShader: userTask?.Data?.vertexShader || task.defaultVertexShader,
       fragmentShader: userTask?.Data?.fragmentShader || task.defaultFragmentShader,
+      defaultVertexShader: task.defaultVertexShader,
       defaultFragmentShader: task.defaultFragmentShader,
       liked: userTask?.Liked === 1,
       disliked: userTask?.Liked === 0,
@@ -273,45 +281,45 @@ class TaskService {
     };
   }
 
-  public async submitTaskWithValidation(userId: number, taskSubmitData: TaskSubmitWithValidationDto): Promise<TaskSubmitResultDto> {
-    if (isEmpty(taskSubmitData) || isEmpty(taskSubmitData.fragmentShader)) throw new HttpException(400, 'Task data is empty');
+  // public async submitTaskWithValidation(userId: number, taskSubmitData: TaskSubmitWithValidationDto): Promise<TaskSubmitResultDto> {
+  //   if (isEmpty(taskSubmitData) || isEmpty(taskSubmitData.fragmentShader)) throw new HttpException(400, 'Task data is empty');
 
-    const task = await this.getTask(taskSubmitData.id);
+  //   const task = await this.getTask(taskSubmitData.id);
 
-    const userTexture = glService.renderToTexture(taskSubmitData.vertexShader, taskSubmitData.fragmentShader, 256, 256);
-    if (!userTexture) {
-      const result: TaskSubmitResultDto = { accepted: false, score: 0, match: 0 };
-      await this.setTaskSubmitionResult(userId, task.id, 0, false, taskSubmitData.vertexShader, taskSubmitData.fragmentShader);
-      return result;
-    }
+  //   const userTexture = glService.renderToTexture(taskSubmitData.vertexShader, taskSubmitData.fragmentShader, 256, 256);
+  //   if (!userTexture) {
+  //     const result: TaskSubmitResultDto = { accepted: false, score: 0, match: 0 };
+  //     await this.setTaskSubmitionResult(userId, task.id, 0, false, taskSubmitData.vertexShader, taskSubmitData.fragmentShader);
+  //     return result;
+  //   }
 
-    const taskTexture = glService.renderToTexture(task.vertexShader, task.fragmentShader, 256, 256);
-    if (!taskTexture) {
-      throw new HttpException(500, 'Task render issue');
-    }
+  //   const taskTexture = glService.renderToTexture(task.vertexShader, task.fragmentShader, 256, 256);
+  //   if (!taskTexture) {
+  //     throw new HttpException(500, 'Task render issue');
+  //   }
 
-    let matches = 0;
-    for (let i = 0; i < 256 * 256; i++) {
-      const index = i * 4;
-      if (
-        userTexture[index + 0] == taskTexture[index + 0] &&
-        userTexture[index + 1] == taskTexture[index + 1] &&
-        userTexture[index + 2] == taskTexture[index + 2] &&
-        userTexture[index + 3] == taskTexture[index + 3]
-      ) {
-        matches++;
-      }
-    }
+  //   let matches = 0;
+  //   for (let i = 0; i < 256 * 256; i++) {
+  //     const index = i * 4;
+  //     if (
+  //       userTexture[index + 0] == taskTexture[index + 0] &&
+  //       userTexture[index + 1] == taskTexture[index + 1] &&
+  //       userTexture[index + 2] == taskTexture[index + 2] &&
+  //       userTexture[index + 3] == taskTexture[index + 3]
+  //     ) {
+  //       matches++;
+  //     }
+  //   }
 
-    const matchDegree = matches / (256 * 256);
-    const score = matchDegree * task.cost;
-    const match = matchDegree;
-    const accepted = match * 100 >= task.threshold;
+  //   const matchDegree = matches / (256 * 256);
+  //   const score = matchDegree * task.cost;
+  //   const match = matchDegree;
+  //   const accepted = match * 100 >= task.threshold;
 
-    const result: TaskSubmitResultDto = { accepted, score, match };
-    await this.setTaskSubmitionResult(userId, task.id, score, accepted, taskSubmitData.vertexShader, taskSubmitData.fragmentShader);
-    return result;
-  }
+  //   const result: TaskSubmitResultDto = { accepted, score, match };
+  //   await this.setTaskSubmitionResult(userId, task.id, score, accepted, taskSubmitData.vertexShader, taskSubmitData.fragmentShader);
+  //   return result;
+  // }
 
   public async submitTask(user: User, taskSubmitData: TaskSubmitDto): Promise<TaskSubmitResultDto> {
     if (isEmpty(taskSubmitData) || isEmpty(taskSubmitData.fragmentShader)) throw new HttpException(400, 'Task data is empty');

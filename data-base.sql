@@ -112,7 +112,7 @@ CREATE TABLE [dbo].[Tasks](
 	[FragmentShader] [text] NULL,
 	[Visibility] [bit] DEFAULT 0,
 	[CreatedBy] [int] NOT NULL,
-	[Module_Id] [int] NOT NULL,
+	[Module_Id] [int] NOT NULL
 )
 GO
 ALTER TABLE [dbo].[Tasks] ADD  CONSTRAINT [PK_dbo.Tasks] PRIMARY KEY CLUSTERED 

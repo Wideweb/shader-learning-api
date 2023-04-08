@@ -41,12 +41,12 @@ class TasksRoute implements Routes {
 
     this.router.get(`${this.path}/:id/userTask`, hasAllPermissions(['task_view']), this.tasksController.getUserTask);
 
-    this.router.post(
-      `${this.path}/:id/submitWithValidation`,
-      hasAllPermissions(['task_submit']),
-      validationMiddleware(TaskSubmitWithValidationDto, 'body'),
-      this.tasksController.submitWithValidation,
-    );
+    // this.router.post(
+    //   `${this.path}/:id/submitWithValidation`,
+    //   hasAllPermissions(['task_submit']),
+    //   validationMiddleware(TaskSubmitWithValidationDto, 'body'),
+    //   this.tasksController.submitWithValidation,
+    // );
 
     this.router.post(
       `${this.path}/:id/submit`,

@@ -91,8 +91,8 @@ export class TaskRepository {
     try {
       const result = await dbConnection.query(
         `
-        INSERT INTO Tasks (Name, Threshold, \`Order\`, Cost, Visibility, Module_Id, CreatedBy, Animated, AnimationSteps, AnimationStepTime, Data)
-        VALUES (:Name, :Threshold, :Order, :Cost, :Visibility, :Module_Id, :CreatedBy, :Animated, :AnimationSteps, :AnimationStepTime, :Data);
+        INSERT INTO Tasks (Name, Threshold, \`Order\`, Cost, Visibility, Module_Id, CreatedBy, Animated, AnimationSteps, AnimationStepTime, Data, VertexCodeEditable, FragmentCodeEditable)
+        VALUES (:Name, :Threshold, :Order, :Cost, :Visibility, :Module_Id, :CreatedBy, :Animated, :AnimationSteps, :AnimationStepTime, :Data, :VertexCodeEditable, :FragmentCodeEditable);
       `,
         { ...task, Data: JSON.stringify(task.Data) },
       );
@@ -119,7 +119,9 @@ export class TaskRepository {
           Animated = :Animated,
           AnimationSteps = :AnimationSteps,
           AnimationStepTime = :AnimationStepTime,
-          Data = :Data
+          Data = :Data,
+          VertexCodeEditable = :VertexCodeEditable,
+          FragmentCodeEditable = :FragmentCodeEditable
         WHERE 
           Id = ${task.Id};
       `,

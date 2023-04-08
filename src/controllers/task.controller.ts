@@ -6,7 +6,6 @@ import {
   TaskListDto,
   TaskSubmitDto,
   TaskSubmitResultDto,
-  TaskSubmitWithValidationDto,
   UpdateTaskDto,
   UserTaskDto,
 } from '@dtos/tasks.dto';
@@ -132,20 +131,20 @@ class TasksController {
     }
   };
 
-  public submitWithValidation = async (req: RequestWithUser, res: Response, next: NextFunction) => {
-    try {
-      const userData: User = req.user;
-      const taskId: number = parseInt(req.params.id);
-      const taskData: TaskSubmitWithValidationDto = req.body;
+  // public submitWithValidation = async (req: RequestWithUser, res: Response, next: NextFunction) => {
+  //   try {
+  //     const userData: User = req.user;
+  //     const taskId: number = parseInt(req.params.id);
+  //     const taskData: TaskSubmitWithValidationDto = req.body;
 
-      taskData.id = taskId;
+  //     taskData.id = taskId;
 
-      const TaskSubmitData: TaskSubmitResultDto = await taskService.submitTaskWithValidation(userData.id, taskData);
-      res.status(200).json(TaskSubmitData);
-    } catch (error) {
-      next(error);
-    }
-  };
+  //     const TaskSubmitData: TaskSubmitResultDto = await taskService.submitTaskWithValidation(userData.id, taskData);
+  //     res.status(200).json(TaskSubmitData);
+  //   } catch (error) {
+  //     next(error);
+  //   }
+  // };
 
   public submit = async (req: RequestWithUser, res: Response, next: NextFunction) => {
     try {
