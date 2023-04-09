@@ -44,7 +44,7 @@ class TaskService {
       Data: {
         vertexShader: task.vertexShader,
         fragmentShader: task.fragmentShader,
-        defaultVertexShader: task.vertexShader,
+        defaultVertexShader: task.defaultVertexShader,
         defaultFragmentShader: task.defaultFragmentShader,
         description: task.description,
         sceneSettings: task.sceneSettings,
@@ -92,7 +92,7 @@ class TaskService {
       Data: {
         vertexShader: task.vertexShader,
         fragmentShader: task.fragmentShader,
-        defaultVertexShader: task.vertexShader,
+        defaultVertexShader: task.defaultVertexShader,
         defaultFragmentShader: task.defaultFragmentShader,
         description: task.description,
         sceneSettings: task.sceneSettings,
