@@ -144,6 +144,8 @@ export class TaskSubmitResultDto {
 
   accepted: boolean;
 
+  vertexShader: string;
+
   fragmentShader: string;
 
   at: Date;
@@ -196,6 +198,8 @@ export class UserTaskSubmissionDto {
   score: number;
 
   accepted: boolean;
+
+  vertexShader: string;
 
   fragmentShader: string;
 
