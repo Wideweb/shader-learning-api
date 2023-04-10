@@ -264,10 +264,13 @@ class TaskService {
     const userTask: UserTaskModel = await taskRepository.findUserTask(userId, taskId);
     const submissions: UserTaskSubmissionModel[] = await taskRepository.getUserTaskSubmissions(userId, taskId);
 
+    const vertexShader = task.vertexCodeEditable && userTask?.Data?.vertexShader ? userTask?.Data?.vertexShader : task.defaultVertexShader;
+    const fragmentShader = task.fragmentCodeEditable && userTask?.Data?.fragmentShader ? userTask?.Data?.fragmentShader : task.defaultFragmentShader;
+
     return {
       task,
-      vertexShader: userTask?.Data?.vertexShader || task.defaultVertexShader,
-      fragmentShader: userTask?.Data?.fragmentShader || task.defaultFragmentShader,
+      vertexShader,
+      fragmentShader,
       defaultVertexShader: task.defaultVertexShader,
       defaultFragmentShader: task.defaultFragmentShader,
       liked: userTask?.Liked === 1,
@@ -275,7 +278,8 @@ class TaskService {
       submissions: submissions.map(it => ({
         score: it.Score,
         accepted: it.Accepted == 1,
-        fragmentShader: it.Data.fragmentShader,
+        vertexShader: task.vertexCodeEditable && it.Data?.vertexShader ? it.Data?.vertexShader : task.defaultVertexShader,
+        fragmentShader: task.fragmentCodeEditable && it.Data?.fragmentShader ? it.Data?.fragmentShader : task.defaultFragmentShader,
         at: it.At,
       })),
     };
@@ -337,8 +341,8 @@ class TaskService {
       Accepted: accepted ? 1 : 0,
       Rejected: accepted ? 0 : 1,
       Data: {
-        vertexShader: taskSubmitData.vertexShader,
-        fragmentShader: taskSubmitData.fragmentShader,
+        vertexShader: task.vertexCodeEditable ? taskSubmitData.vertexShader : null,
+        fragmentShader: task.fragmentCodeEditable ? taskSubmitData.fragmentShader : null,
       },
       AcceptedAt: accepted ? Utils.asUTC(at) : null,
     };
@@ -357,8 +361,8 @@ class TaskService {
       Score: score,
       Accepted: accepted ? 1 : 0,
       Data: {
-        vertexShader: taskSubmitData.vertexShader,
-        fragmentShader: taskSubmitData.fragmentShader,
+        vertexShader: task.vertexCodeEditable ? taskSubmitData.vertexShader : null,
+        fragmentShader: task.fragmentCodeEditable ? taskSubmitData.fragmentShader : null,
       },
       At: Utils.asUTC(at),
     });
@@ -369,58 +373,65 @@ class TaskService {
       await taskRepository.createUserTask(userTaskToSave);
     }
 
-    const result: TaskSubmitResultDto = { accepted, score, match, at, fragmentShader: taskSubmitData.fragmentShader };
+    const result: TaskSubmitResultDto = {
+      accepted,
+      score,
+      match,
+      at,
+      vertexShader: task.vertexCodeEditable ? taskSubmitData.vertexShader : task.vertexShader,
+      fragmentShader: task.fragmentCodeEditable ? taskSubmitData.fragmentShader : task.fragmentShader,
+    };
     return result;
   }
 
-  private async setTaskSubmitionResult(
-    userId: number,
-    taskId: number,
-    score: number,
-    accepted: boolean,
-    vertexShader: string,
-    fragmentShader: string,
-  ): Promise<boolean> {
-    const userTaskToSave: UserTaskModel = {
-      User_Id: userId,
-      Task_Id: taskId,
-      Score: score,
-      Accepted: accepted ? 1 : 0,
-      Rejected: accepted ? 0 : 1,
-      Data: {
-        vertexShader,
-        fragmentShader,
-      },
-      AcceptedAt: accepted ? Utils.getUTC() : null,
-    };
+  // private async setTaskSubmitionResult(
+  //   userId: number,
+  //   taskId: number,
+  //   score: number,
+  //   accepted: boolean,
+  //   vertexShader: string,
+  //   fragmentShader: string,
+  // ): Promise<boolean> {
+  //   const userTaskToSave: UserTaskModel = {
+  //     User_Id: userId,
+  //     Task_Id: taskId,
+  //     Score: score,
+  //     Accepted: accepted ? 1 : 0,
+  //     Rejected: accepted ? 0 : 1,
+  //     Data: {
+  //       vertexShader,
+  //       fragmentShader,
+  //     },
+  //     AcceptedAt: accepted ? Utils.getUTC() : null,
+  //   };
 
-    const userTask = await taskRepository.findUserTask(userId, taskId);
+  //   const userTask = await taskRepository.findUserTask(userId, taskId);
 
-    let saved = false;
-    if (userTask) {
-      saved = await taskRepository.updateUserTask(userTaskToSave);
-    } else {
-      saved = await taskRepository.createUserTask(userTaskToSave);
-    }
+  //   let saved = false;
+  //   if (userTask) {
+  //     saved = await taskRepository.updateUserTask(userTaskToSave);
+  //   } else {
+  //     saved = await taskRepository.createUserTask(userTaskToSave);
+  //   }
 
-    await taskRepository.saveUserTaskSubmission({
-      User_Id: userId,
-      Task_Id: taskId,
-      Score: score,
-      Accepted: accepted ? 1 : 0,
-      Data: {
-        vertexShader,
-        fragmentShader,
-      },
-      At: Utils.getUTC(),
-    });
+  //   await taskRepository.saveUserTaskSubmission({
+  //     User_Id: userId,
+  //     Task_Id: taskId,
+  //     Score: score,
+  //     Accepted: accepted ? 1 : 0,
+  //     Data: {
+  //       vertexShader,
+  //       fragmentShader,
+  //     },
+  //     At: Utils.getUTC(),
+  //   });
 
-    if (!saved) {
-      throw new HttpException(500, 'Task submition is not saved');
-    }
+  //   if (!saved) {
+  //     throw new HttpException(500, 'Task submition is not saved');
+  //   }
 
-    return saved;
-  }
+  //   return saved;
+  // }
 
   public async getUserScore(userId: number): Promise<number> {
     const score: number = await taskRepository.getUserScore(userId);
