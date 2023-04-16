@@ -1,6 +1,6 @@
 import { genSalt, hash, compare } from 'bcrypt';
 import { sign, verify } from 'jsonwebtoken';
-import { ACCESS_TOKEN_SECRET, ACCESS_TOKEN_LIFE, REFRESH_TOKEN_SECRET, REFRESH_TOKEN_LIFE } from '@config';
+import { ACCESS_TOKEN_SECRET, ACCESS_TOKEN_LIFE, REFRESH_TOKEN_SECRET, REFRESH_TOKEN_LIFE, BASE_URL } from '@config';
 import { CreateUserDto, LoginUserDto } from '@dtos/users.dto';
 import { HttpException } from '@exceptions/HttpException';
 import { DataStoredInRefreshToken, DataStoredInToken, TokenData } from '@interfaces/auth.interface';
@@ -13,6 +13,10 @@ import { UserNameNotFoundExcrption } from '@exceptions/UserNameNotFoundException
 import { PasswordMatchException } from '@exceptions/PasswordMatchException';
 import { EmailNotUniqueException } from '@exceptions/EmailNotUniqueException';
 import { UserNameNotUniqueException } from '@exceptions/UserNameNotUniqueException';
+import emailSender from './emailSender';
+import { randomUUID } from 'crypto';
+import { UserNotFoundException } from '@/exceptions/UserNotFoundException';
+import { WrongPasswordResetTokenException } from '@/exceptions/WrongPasswordResetTokenException';
 
 class AuthService {
   public async signup(userData: CreateUserDto): Promise<{ tokenData: TokenData; user: User }> {
@@ -33,6 +37,7 @@ class AuthService {
       Password: passwordHashed,
       PasswordSalt: passwordSalt,
       FailedLoginAttemptsCount: 0,
+      ResetPasswordToken: null,
       Role_Id: 2,
     });
 
@@ -63,6 +68,43 @@ class AuthService {
 
     const isPasswordMatching: boolean = await compare(userData.password, findUser.Password);
     if (!isPasswordMatching) throw new PasswordMatchException();
+
+    const permissions = await this.getPermissions(findUser.Id);
+    const tokenData = await this.createSession(findUser, permissions);
+
+    const user: User = {
+      id: findUser.Id,
+      name: findUser.UserName,
+      email: findUser.Email,
+      roleId: findUser.Role_Id,
+      permissions,
+    };
+
+    return { tokenData, user };
+  }
+
+  public async sendPasswordResetLink(email: string): Promise<void> {
+    const findUser: UserModel = await userRepository.findUserByEmail(email);
+    if (!findUser) return;
+
+    const token = randomUUID();
+    await userRepository.setResetPasswordToken(findUser.Id, token);
+
+    const resetUrl = `${BASE_URL}/password-reset/${findUser.Id}/${token}`;
+    await emailSender.send(findUser.Email, 'Password reset', resetUrl);
+  }
+
+  public async resetPassword(userId: number, token: string, password: string): Promise<{ tokenData: TokenData; user: User }> {
+    const findUser: UserModel = await userRepository.findUserById(userId);
+    if (!findUser) throw new UserNotFoundException(userId);
+
+    if (findUser.ResetPasswordToken != token) throw new WrongPasswordResetTokenException(userId, token);
+
+    findUser.PasswordSalt = await genSalt();
+    findUser.Password = await hash(password, findUser.PasswordSalt);
+
+    await userRepository.setPassword(userId, findUser.Password, findUser.PasswordSalt);
+    await userRepository.invalidateUserSessions(userId);
 
     const permissions = await this.getPermissions(findUser.Id);
     const tokenData = await this.createSession(findUser, permissions);
