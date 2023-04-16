@@ -4,6 +4,7 @@ export interface UserModel {
   Email: string;
   Password: string;
   PasswordSalt: string;
+  ResetPasswordToken: string;
   FailedLoginAttemptsCount: number;
   Role_Id: number;
 }

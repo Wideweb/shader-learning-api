@@ -1,7 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
-import { CreateUserDto, LoginUserDto } from '@dtos/users.dto';
+import { CreateUserDto, LoginUserDto, ResetPasswordDto, RequestResetPasswordDto } from '@dtos/users.dto';
 import { RequestWithUser } from '@interfaces/auth.interface';
-import { User } from '@interfaces/users.interface';
 import authService from '@services/auth.service';
 import { logger } from '@/utils/logger';
 
@@ -56,6 +55,26 @@ class AuthController {
 
       res.setHeader('Set-Cookie', [authService.createCookie(accessToken.token, accessToken.expiresIn)]);
       res.status(200).json(accessToken);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public requestResetPassword = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const payload: RequestResetPasswordDto = req.body;
+      await authService.sendPasswordResetLink(payload.email);
+      res.status(200).json(true);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public resetPassword = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const payload: ResetPasswordDto = req.body;
+      const { tokenData, user } = await authService.resetPassword(payload.userId, payload.token, payload.password);
+      res.status(200).json({ tokenData, user });
     } catch (error) {
       next(error);
     }

@@ -21,4 +21,9 @@ export const {
   AWS_SECRET,
   AWS_BUCKET,
   TEMP_FOLDER,
+  SMTP_HOST,
+  SMTP_PORT,
+  SMTP_USER,
+  SMTP_PASSWORD,
+  BASE_URL,
 } = process.env;

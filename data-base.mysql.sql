@@ -27,6 +27,7 @@ CREATE TABLE `Users`(
 	`Email` nvarchar(255) NOT NULL,
 	`PasswordSalt` TEXT NOT NULL,
 	`Password` TEXT NOT NULL,
+	`ResetPasswordToken` TEXT NOT NULL,
 	`FailedLoginAttemptsCount` INT NOT NULL,
 	`Role_Id` INT NOT NULL,
 

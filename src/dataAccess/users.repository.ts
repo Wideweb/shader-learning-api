@@ -79,11 +79,67 @@ export class UserRepository {
         `
         UPDATE UserSessions
         SET 
-          RefreshToken = :token, RefreshToken = :refreshToken, FinishedAt = :finishedAt
+          RefreshToken = :refreshToken, FinishedAt = :finishedAt
         WHERE 
           Id = :sessionId
       `,
         { sessionId, refreshToken: null, finishedAt: Utils.getUTC() },
+      );
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  public async invalidateUserSessions(userId: number): Promise<boolean> {
+    try {
+      await dbConnection.query(
+        `
+        UPDATE UserSessions
+        SET 
+          RefreshToken = :refreshToken, FinishedAt = :finishedAt
+        WHERE 
+          User_Id = :userId AND FinishedAt IS NULL
+      `,
+        { userId, refreshToken: null, finishedAt: Utils.getUTC() },
+      );
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  public async setResetPasswordToken(userId: number, token: string): Promise<boolean> {
+    try {
+      await dbConnection.query(
+        `
+        UPDATE Users
+        SET 
+          ResetPasswordToken = :token
+        WHERE 
+          Id = :userId
+      `,
+        { userId, token },
+      );
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  public async setPassword(userId: number, password: string, passwordSalt: string): Promise<boolean> {
+    try {
+      await dbConnection.query(
+        `
+        UPDATE Users
+        SET 
+          Password = :password,
+          PasswordSalt = :passwordSalt,
+          ResetPasswordToken = NULL
+        WHERE 
+          Id = :userId
+      `,
+        { userId, password, passwordSalt },
       );
       return true;
     } catch {

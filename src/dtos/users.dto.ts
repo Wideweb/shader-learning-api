@@ -1,4 +1,4 @@
-import { IsEmail, IsString } from 'class-validator';
+import { IsEmail, IsNumber, IsString } from 'class-validator';
 
 export class CreateUserDto {
   @IsString()
@@ -37,4 +37,20 @@ export interface UserProfileDto {
   rank: number;
 
   solved: number;
+}
+
+export class RequestResetPasswordDto {
+  @IsEmail()
+  public email: string;
+}
+
+export class ResetPasswordDto {
+  @IsNumber()
+  public userId: number;
+
+  @IsString()
+  public token: string;
+
+  @IsString()
+  public password: string;
 }
