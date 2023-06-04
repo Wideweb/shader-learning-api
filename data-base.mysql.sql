@@ -294,3 +294,16 @@ CREATE TABLE `UserPermissions`(
 	FOREIGN KEY (`User_Id`) REFERENCES `Users`(`Id`),
 	FOREIGN KEY (`Permission_Id`) REFERENCES `Permissions`(`Id`)
 );
+
+/*
+FEEDBACK
+*/
+CREATE TABLE `Feedback`(
+    `Id` INT NOT NULL AUTO_INCREMENT,
+	`AuthorName` nvarchar(255) NOT NULL,
+	`AuthorTitle` nvarchar(255) NOT NULL,
+	`Message` TEXT DEFAULT NULL,
+	`Order` INT NOT NULL,
+
+	PRIMARY KEY (`Id`)
+);
