@@ -3,7 +3,14 @@ import { Routes } from '@interfaces/routes.interface';
 import validationMiddleware from '@middlewares/validation.middleware';
 import { hasAllPermissions } from '@/middlewares/auth.middleware';
 import ModuleController from '@/controllers/module.controller';
-import { CreateModuleDto, ModuleTaskReorderDto, UpdateModuleDescriptionDto, UpdateModuleDto, UpdateModuleNameDto } from '@/dtos/modules.dto';
+import {
+  CreateModuleDto,
+  ModuleTaskReorderDto,
+  UpdateModuleCoverDto,
+  UpdateModuleDescriptionDto,
+  UpdateModuleDto,
+  UpdateModuleNameDto,
+} from '@/dtos/modules.dto';
 
 class ModuleRoute implements Routes {
   public path = '/modules';
@@ -47,6 +54,15 @@ class ModuleRoute implements Routes {
       hasAllPermissions(['module_edit']),
       validationMiddleware(UpdateModuleDescriptionDto, 'body'),
       this.controller.updateDescription,
+    );
+
+    this.router.get(`${this.path}/:id/cover`, hasAllPermissions(['module_view']), this.controller.getCover);
+
+    this.router.put(
+      `${this.path}/:id/cover`,
+      hasAllPermissions(['module_edit']),
+      validationMiddleware(UpdateModuleCoverDto, 'body'),
+      this.controller.updateCover,
     );
 
     this.router.put(`${this.path}/:id/toggleLock`, hasAllPermissions(['module_edit']), this.controller.toggleLock);

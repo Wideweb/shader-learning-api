@@ -6,6 +6,7 @@ import {
   ModuleDto,
   ModuleListDto,
   ModuleUserProgressDto,
+  UpdateModuleCoverDto,
   UpdateModuleDescriptionDto,
   UpdateModuleDto,
   UpdateModuleNameDto,
@@ -56,6 +57,33 @@ class ModuleController {
       const id = await moduleService.updateDescription(moduleId, payload.description);
 
       res.status(200).json(id);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public updateCover = async (req: RequestWithUser, res: Response, next: NextFunction) => {
+    try {
+      const moduleId: number = parseInt(req.params.id);
+      const payload: UpdateModuleCoverDto = req.body;
+      const id = await moduleService.updateCover(moduleId, payload.file);
+
+      res.status(200).json(id);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public getCover = async (req: RequestWithUser, res: Response, next: NextFunction) => {
+    try {
+      const moduleId: number = parseInt(req.params.id);
+      const buffer = await moduleService.getCover(moduleId);
+
+      res.setHeader('Cross-Origin-Resource-Policy', '*');
+      res.setHeader('Cross-Origin-Opener-Policy', '*');
+      res.setHeader('Cross-Origin-Embedder-Policy', '*');
+      res.writeHead(200, { 'Content-Type': 'image/*' });
+      res.end(buffer);
     } catch (error) {
       next(error);
     }

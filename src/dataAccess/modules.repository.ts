@@ -23,15 +23,15 @@ export class ModuleRepository {
     try {
       const result = await dbConnection.query(
         `
-        INSERT INTO Modules (Name, Description, CreatedBy, Locked, \`Order\`)
-        VALUES (:Name, :Description, :CreatedBy, :Locked, :Order);
+        INSERT INTO Modules (Name, Description, CreatedBy, Locked, \`Order\`, Cover)
+        VALUES (:Name, :Description, :CreatedBy, :Locked, :Order, :Cover);
       `,
         { ...module },
       );
       return result.insertId;
     } catch (err) {
       logger.error(
-        `DB: Failed to create module | Name:${module.Name}, Description:${module.Description}, CreatedBy:${module.CreatedBy}, Locked:${module.Locked}, Order:${module.Order}, error:${err.message}`,
+        `DB: Failed to create module | Name:${module.Name}, Description:${module.Description}, CreatedBy:${module.CreatedBy}, Locked:${module.Locked}, Order:${module.Order}, Cover:${module.Order}, error:${err.message}`,
       );
       return -1;
     }
@@ -43,16 +43,16 @@ export class ModuleRepository {
         `
         UPDATE Modules
         SET 
-          Name = :Name, Description = :Description, Locked = :Locked, \`Order\` = :Order
+          Name = :Name, Description = :Description, Locked = :Locked, \`Order\` = :Order, Cover = :Cover
         WHERE 
           Id = ${module.Id};
       `,
-        { ...module, Locked: module.Locked ? 1 : 0 },
+        { ...module, Locked: module.Locked ? 1 : 0, Cover: module.Cover ? 1 : 0 },
       );
       return true;
     } catch (err) {
       logger.error(
-        `DB: Failed to update module | Name:${module.Name}, Description:${module.Description}, CreatedBy:${module.CreatedBy},  Locked:${module.Locked}, Order:${module.Order} error:${err.message}`,
+        `DB: Failed to update module | Name:${module.Name}, Description:${module.Description}, CreatedBy:${module.CreatedBy},  Locked:${module.Locked}, Order:${module.Order}, Cover:${module.Order}, error:${err.message}`,
       );
       return false;
     }
@@ -67,6 +67,7 @@ export class ModuleRepository {
         Modules.Description,
         Modules.Locked,
         Modules.Order,
+        Modules.Cover,
         IFNULL(Module_Tasks.Size, 0) AS \`Tasks\`
       FROM Modules
       LEFT JOIN 
@@ -92,6 +93,7 @@ export class ModuleRepository {
         Modules.Description,
         Modules.Locked,
         Modules.Order,
+        Modules.Cover,
         IFNULL(Module_Tasks.Size, 0) AS \`Tasks\`,
         IFNULL(User_Tasks.Size, 0) AS \`AcceptedTasks\`
       FROM Modules
