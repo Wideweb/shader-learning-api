@@ -105,12 +105,18 @@ class ModuleController {
       const moduleId: number = parseInt(req.params.id);
       const module: ModuleDto = await moduleService.getModule(moduleId);
 
-      if (module.locked) {
-        res.status(200).json(null);
+      const userData: User = req.user;
+      const canEditModule = userData && userData.permissions.some(p => p == 'module_edit');
+
+      if (module.locked && !canEditModule) {
+        res.status(403).json(null);
         return;
       }
 
-      module.tasks = module.tasks.filter(task => task.visibility);
+      const canEditTask = userData && userData.permissions.some(p => p == 'task_edit');
+      if (!canEditTask) {
+        module.tasks = module.tasks.filter(task => task.visibility);
+      }
 
       res.status(200).json(module);
     } catch (error) {
@@ -121,12 +127,14 @@ class ModuleController {
   public list = async (req: RequestWithUser, res: Response, next: NextFunction) => {
     try {
       const userData: User = req.user;
+
       if (userData) {
         const results: ModuleListDto[] = await moduleService.getUserModuleList(userData.id);
-        res.status(200).json(results);
+        const canEditModule = userData.permissions.some(p => p == 'module_edit');
+        res.status(200).json(results.filter(m => !m.locked || canEditModule));
       } else {
         const results: ModuleListDto[] = await moduleService.getModuleList();
-        res.status(200).json(results);
+        res.status(200).json(results.filter(m => !m.locked));
       }
     } catch (error) {
       next(error);
@@ -171,8 +179,15 @@ class ModuleController {
   public userProgress = async (req: RequestWithUser, res: Response, next: NextFunction) => {
     try {
       const userData: User = req.user;
+      const canEditModule = userData && userData.permissions.some(p => p == 'module_edit');
+
       const moduleId: number = parseInt(req.params.id);
       const moduleProgress: ModuleUserProgressDto = await moduleService.getUserProgress(userData.id, moduleId);
+
+      if (moduleProgress.locked && !canEditModule) {
+        res.status(403).json(null);
+        return;
+      }
 
       res.status(200).json(moduleProgress);
     } catch (error) {

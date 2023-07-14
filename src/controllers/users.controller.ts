@@ -24,10 +24,17 @@ class UsersController {
     }
   };
 
-  public getProgress = async (req: Request, res: Response, next: NextFunction) => {
+  public getProgress = async (req: RequestWithUser, res: Response, next: NextFunction) => {
     try {
+      const myId: number = req.user?.id;
       const userId: number = parseInt(req.params.id);
-      const results: UserTaskResultDto[] = await taskService.getUserTaskResults(userId);
+      let results: UserTaskResultDto[] = [];
+
+      if (!myId) {
+        results = await taskService.getUserTaskResults(userId);
+      } else {
+        results = await taskService.getUserTaskResultsForMe(userId, myId);
+      }
 
       res.status(200).json(results);
     } catch (error) {

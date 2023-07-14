@@ -10,6 +10,7 @@ import {
   UpdateTaskDto,
   TaskListDto,
   TaskFeedbackDto,
+  TaskLinterRule,
 } from '@dtos/tasks.dto';
 import taskRepository from '@dataAccess/tasks.repository';
 import { TaskModel, UserTaskModel, UserTaskSubmissionModel } from '@dataAccess/models/task.model';
@@ -65,6 +66,16 @@ class TaskService {
       await taskRepository.addTaskChannel({ Task_Id: taskId, Index: i });
       await tempStorage.remove(fileId);
     }
+
+    (task.rules || []).forEach(async rule => {
+      await taskRepository.addTaskLinterRule({
+        Id: -1,
+        Task_Id: taskId,
+        Keyword: rule.keyword,
+        Message: rule.message,
+        Severity: rule.severity,
+      });
+    });
 
     return taskId;
   }
@@ -123,6 +134,38 @@ class TaskService {
       await tempStorage.remove(fileId);
     }
 
+    const newRules = task.rules;
+    const oldRules = await taskRepository.getTaskOwnedLinterRules(task.id);
+    const rulesToRemove = oldRules.filter(oldRule => newRules.every(newRule => newRule.id != oldRule.Id));
+    const rulesToCreate = newRules.filter(rule => !rule.id);
+    const rulesToUpdate = newRules
+      .filter(rule => rule.id)
+      .map(rule => [rule, oldRules.find(it => it.Id == rule.id)])
+      .filter(([a, b]) => JSON.stringify(a) != JSON.stringify(b))
+      .map(([rule]) => rule as TaskLinterRule);
+
+    rulesToCreate.forEach(
+      async rule =>
+        await taskRepository.addTaskLinterRule({
+          Id: -1,
+          Task_Id: task.id,
+          Keyword: rule.keyword,
+          Message: rule.message,
+          Severity: rule.severity,
+        }),
+    );
+    rulesToUpdate.forEach(
+      async rule =>
+        await taskRepository.updateTaskLinterRule({
+          Id: -1,
+          Task_Id: task.id,
+          Keyword: rule.keyword,
+          Message: rule.message,
+          Severity: rule.severity,
+        }),
+    );
+    rulesToRemove.forEach(async rule => await taskRepository.removeTaskLinterRule(rule.Id));
+
     return task.id;
   }
 
@@ -151,6 +194,7 @@ class TaskService {
 
     const user = await userRepository.findUserById(task.CreatedBy);
     const channels = await taskRepository.getTaskChannels(task.Id);
+    const rules = await taskRepository.getTaskLinterRules(task.Id);
 
     return {
       id: task.Id,
@@ -177,6 +221,13 @@ class TaskService {
       animated: task.Animated == 1,
       animationSteps: task.AnimationSteps,
       animationStepTime: task.AnimationStepTime,
+      rules: rules.map(rule => ({
+        id: rule.Id,
+        default: rule.Task_Id == null,
+        keyword: rule.Keyword,
+        message: rule.Message,
+        severity: rule.Severity,
+      })),
     };
   }
 
@@ -239,10 +290,26 @@ class TaskService {
       name: task.Name,
       order: task.Order,
       score: task.Score,
-      accepted: task.Accepted > 0,
-      rejected: task.Rejected > 0,
+      accepted: task.Accepted == 1,
+      rejected: task.Rejected == 1,
       match: task.Score / task.Cost,
-      locked: false,
+      locked: true,
+    }));
+  }
+
+  public async getUserTaskResultsForMe(userId: number, myId: number): Promise<UserTaskResultDto[]> {
+    const tasks = await taskRepository.getUserTaskResultsForMe(userId, myId);
+
+    return tasks.map(task => ({
+      id: task.Id,
+      moduleId: task.Module_Id,
+      name: task.Name,
+      order: task.Order,
+      score: task.Score,
+      accepted: task.Accepted == 1,
+      rejected: task.Rejected == 1,
+      match: task.Score / task.Cost,
+      locked: task.Locked == 1,
     }));
   }
 

@@ -124,6 +124,21 @@ CREATE TABLE `TaskChannels`(
 )
 
 /*
+TASK LINTER RULE
+*/
+CREATE TABLE `TaskLinterRules`(
+	`Id` INT NOT NULL AUTO_INCREMENT,
+    `Task_Id` INT,
+	`Keyword` TEXT NOT NULL,
+	`Message` TEXT DEFAULT NULL,
+	--   0 - info | 1 - warning | 2 - error;
+    `Severity` TINYINT DEFAULT 0,
+
+	PRIMARY KEY (`Id`),
+	FOREIGN KEY (`Task_Id`) REFERENCES `Tasks`(`Id`)
+)
+
+/*
 USER TASK
 */
 CREATE TABLE `UserTask`(

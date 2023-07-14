@@ -9,7 +9,6 @@ import { isEmpty } from '@utils/util';
 import userRepository from '@dataAccess/users.repository';
 import permissionRepository from '@dataAccess/permissions.repository';
 import { UserModel } from '@dataAccess/models/user.model';
-import { UserNameNotFoundExcrption } from '@exceptions/UserNameNotFoundException';
 import { PasswordMatchException } from '@exceptions/PasswordMatchException';
 import { EmailNotUniqueException } from '@exceptions/EmailNotUniqueException';
 import { UserNameNotUniqueException } from '@exceptions/UserNameNotUniqueException';
@@ -17,6 +16,7 @@ import emailSender from './emailSender';
 import { randomUUID } from 'crypto';
 import { UserNotFoundException } from '@/exceptions/UserNotFoundException';
 import { WrongPasswordResetTokenException } from '@/exceptions/WrongPasswordResetTokenException';
+import { UserEmailNotFoundExcrption } from '@/exceptions/UserEmailNotFoundException copy';
 
 class AuthService {
   public async signup(userData: CreateUserDto): Promise<{ tokenData: TokenData; user: User }> {
@@ -63,8 +63,8 @@ class AuthService {
   public async login(userData: LoginUserDto): Promise<{ tokenData: TokenData; user: User }> {
     if (isEmpty(userData)) throw new HttpException(400, 'userData is empty');
 
-    const findUser: UserModel = await userRepository.findUserByName(userData.name);
-    if (!findUser) throw new UserNameNotFoundExcrption(userData.name);
+    const findUser: UserModel = await userRepository.findUserByEmail(userData.email);
+    if (!findUser) throw new UserEmailNotFoundExcrption(userData.email);
 
     const isPasswordMatching: boolean = await compare(userData.password, findUser.Password);
     if (!isPasswordMatching) throw new PasswordMatchException();

@@ -175,7 +175,8 @@ export class UserRepository {
       FROM 
       Users
         LEFT JOIN UserTask ON Users.Id = UserTask.User_Id AND UserTask.Accepted = 1
-      WHERE Users.Id = :userId
+        LEFT JOIN Tasks ON UserTask.Task_Id = Tasks.Id
+      WHERE Users.Id = :userId AND Tasks.Visibility = 1
       GROUP BY Users.Id, Users.UserName
       ORDER BY \`Rank\` DESC
       LIMIT 1

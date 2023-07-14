@@ -29,6 +29,15 @@ export interface TaskChannelModel {
   Index: number;
 }
 
+export interface TaskLinterRule {
+  Id: number | null;
+  Task_Id: number;
+  Keyword: string;
+  Message: string;
+  // 0 - info | 1 - warning | 2 - error;
+  Severity: number;
+}
+
 export interface TaskListModel {
   Id: number;
   Name: string;
@@ -73,6 +82,8 @@ export interface UserTaskResultModel {
   Score: number;
   Accepted: 0 | 1;
   Rejected: 0 | 1;
+  Locked: 0 | 1;
+  Visibility: 0 | 1;
 }
 
 export interface TaskFeedbackModel {
