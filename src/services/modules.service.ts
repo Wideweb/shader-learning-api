@@ -24,6 +24,7 @@ class ModulesService {
       Order: order,
       Locked: module.locked ? 1 : 0,
       Cover: module.cover ? 1 : 0,
+      PageHeaderImage: module.pageHeaderImage ? 1 : 0,
     });
 
     if (moduleId < 0) {
@@ -34,6 +35,12 @@ class ModulesService {
       const file = await tempStorage.get(module.cover);
       await amazonFileStorage.save(`Modules/${moduleId}`, `cover`, file);
       await tempStorage.remove(module.cover);
+    }
+
+    if (module.pageHeaderImage) {
+      const file = await tempStorage.get(module.pageHeaderImage);
+      await amazonFileStorage.save(`Modules/${moduleId}`, `page-header`, file);
+      await tempStorage.remove(module.pageHeaderImage);
     }
 
     return moduleId;
@@ -55,6 +62,7 @@ class ModulesService {
       Order: findModule.Order,
       Locked: module.locked ? 1 : 0,
       Cover: module.cover ? 1 : 0,
+      PageHeaderImage: module.pageHeaderImage ? 1 : 0,
     });
 
     if (!result) {
@@ -65,6 +73,12 @@ class ModulesService {
       const file = await tempStorage.get(module.cover);
       await amazonFileStorage.save(`Modules/${module.id}`, `cover`, file);
       await tempStorage.remove(module.cover);
+    }
+
+    if (module.pageHeaderImage) {
+      const file = await tempStorage.get(module.pageHeaderImage);
+      await amazonFileStorage.save(`Modules/${module.id}`, `page-header`, file);
+      await tempStorage.remove(module.pageHeaderImage);
     }
 
     return module.id;
@@ -88,6 +102,7 @@ class ModulesService {
       locked: module.Locked == 1,
       tasks,
       cover: module.Cover == 1,
+      pageHeaderImage: module.PageHeaderImage == 1,
     };
   }
 
@@ -109,6 +124,7 @@ class ModulesService {
       locked: module.Locked == 1,
       tasks,
       cover: module.Cover == 1,
+      pageHeaderImage: module.PageHeaderImage == 1,
     };
   }
 
@@ -219,6 +235,35 @@ class ModulesService {
   public async getCover(moduleId: number): Promise<Buffer> {
     const channel = await amazonFileStorage.get(`Modules/${moduleId}`, `cover`);
     return channel;
+  }
+
+  public async updatePageHeaderImage(moduleId: number, fileId: string): Promise<boolean> {
+    const module: ModuleModel = await moduleRepository.findById(moduleId);
+    if (module == null) {
+      throw new HttpException(404, `Module with id=${moduleId} doesn't exist`);
+    }
+
+    if (fileId) {
+      const file = await tempStorage.get(fileId);
+      await amazonFileStorage.save(`Modules/${module.Id}`, `page-header`, file);
+      await tempStorage.remove(fileId);
+      module.PageHeaderImage = 1;
+    } else {
+      module.PageHeaderImage = 0;
+    }
+
+    const result = await moduleRepository.updateModule(module);
+
+    if (!result) {
+      throw new HttpException(500, 'Module description update error');
+    }
+
+    return true;
+  }
+
+  public async getPageHeaderImage(moduleId: number): Promise<Buffer> {
+    const file = await amazonFileStorage.get(`Modules/${moduleId}`, `page-header`);
+    return file;
   }
 
   public async reorderTasks(moduleId: number, oldOrder: number, newOrder: number): Promise<boolean> {

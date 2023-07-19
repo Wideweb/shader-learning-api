@@ -43,7 +43,7 @@ export class ModuleRepository {
         `
         UPDATE Modules
         SET 
-          Name = :Name, Description = :Description, Locked = :Locked, \`Order\` = :Order, Cover = :Cover
+          Name = :Name, Description = :Description, Locked = :Locked, \`Order\` = :Order, Cover = :Cover, PageHeaderImage = :PageHeaderImage
         WHERE 
           Id = ${module.Id};
       `,

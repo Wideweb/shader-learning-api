@@ -67,6 +67,7 @@ CREATE TABLE `Modules`(
 	`Locked` TINYINT DEFAULT 1,
 	`Order` INT NOT NULL,
 	`Cover` TINYINT DEFAULT 1,
+	`PageHeaderImage` TINYINT DEFAULT 1,
 
 	PRIMARY KEY (`Id`),
 	FOREIGN KEY (`CreatedBy`) REFERENCES `Users`(`Id`)

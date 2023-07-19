@@ -40,7 +40,7 @@ const permissionMiddleware = (permissions: string[], all: boolean) => async (req
       if (hasDefaultPermissions) {
         next();
       } else {
-        next(new HttpException(401, 'Wrong authentication token'));
+        next(new HttpException(403, 'Wrong authentication token'));
       }
       return;
     }

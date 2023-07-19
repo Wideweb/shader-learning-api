@@ -10,6 +10,7 @@ import {
   UpdateModuleDescriptionDto,
   UpdateModuleDto,
   UpdateModuleNameDto,
+  UpdateModulePageHeaderImageDto,
 } from '@/dtos/modules.dto';
 import moduleService from '@/services/modules.service';
 import taskService from '@/services/tasks.service';
@@ -83,6 +84,33 @@ class ModuleController {
       res.setHeader('Cross-Origin-Opener-Policy', '*');
       res.setHeader('Cross-Origin-Embedder-Policy', '*');
       res.writeHead(200, { 'Content-Type': 'image/*' });
+      res.end(buffer);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public updatePageHeaderImage = async (req: RequestWithUser, res: Response, next: NextFunction) => {
+    try {
+      const moduleId: number = parseInt(req.params.id);
+      const payload: UpdateModulePageHeaderImageDto = req.body;
+      const id = await moduleService.updatePageHeaderImage(moduleId, payload.file);
+
+      res.status(200).json(id);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public getPageHeaderImage = async (req: RequestWithUser, res: Response, next: NextFunction) => {
+    try {
+      const moduleId: number = parseInt(req.params.id);
+      const buffer = await moduleService.getPageHeaderImage(moduleId);
+
+      res.setHeader('Cross-Origin-Resource-Policy', '*');
+      res.setHeader('Cross-Origin-Opener-Policy', '*');
+      res.setHeader('Cross-Origin-Embedder-Policy', '*');
+      res.writeHead(200, { 'Content-Type': 'image/svg+xml' });
       res.end(buffer);
     } catch (error) {
       next(error);

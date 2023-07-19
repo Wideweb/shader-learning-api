@@ -17,6 +17,7 @@ import { randomUUID } from 'crypto';
 import { UserNotFoundException } from '@/exceptions/UserNotFoundException';
 import { WrongPasswordResetTokenException } from '@/exceptions/WrongPasswordResetTokenException';
 import { UserEmailNotFoundExcrption } from '@/exceptions/UserEmailNotFoundException copy';
+import { Utils } from './utils';
 
 class AuthService {
   public async signup(userData: CreateUserDto): Promise<{ tokenData: TokenData; user: User }> {
@@ -141,8 +142,10 @@ class AuthService {
     return {
       accessToken: accessToken.token,
       accessTokenLife: accessToken.expiresIn,
+      accessTokenExpiresAt: accessToken.expiresAt,
       refreshToken: refreshToken.token,
       refreshTokenLife: refreshToken.expiresIn,
+      refreshTokenExpiresAt: refreshToken.expiresAt,
     };
   }
 
@@ -171,25 +174,29 @@ class AuthService {
     return accessToken;
   }
 
-  private createAccessToken(user: UserModel, permissions: string[], sessionId: number): { token: string; expiresIn: number } {
+  private createAccessToken(user: UserModel, permissions: string[], sessionId: number): { token: string; expiresIn: number; expiresAt: number } {
     const storedData: DataStoredInToken = { id: user.Id, permissions, sessionId };
     const secret: string = ACCESS_TOKEN_SECRET;
     const expiresIn = Number.parseInt(ACCESS_TOKEN_LIFE);
+    const expiresAt = expiresIn > 0 ? new Date().getTime() + expiresIn * 1000 : -1;
 
     return {
       token: sign(storedData, secret, { expiresIn }),
       expiresIn,
+      expiresAt,
     };
   }
 
-  private createRefreshToken(user: UserModel, sessionId: number): { token: string; expiresIn: number } {
+  private createRefreshToken(user: UserModel, sessionId: number): { token: string; expiresIn: number; expiresAt: number } {
     const storedData: DataStoredInRefreshToken = { id: user.Id, sessionId };
     const secret: string = REFRESH_TOKEN_SECRET;
     const expiresIn = Number.parseInt(REFRESH_TOKEN_LIFE);
+    const expiresAt = expiresIn > 0 ? new Date().getTime() + expiresIn * 1000 : -1;
 
     return {
       token: sign(storedData, secret, expiresIn > 0 ? { expiresIn } : null),
       expiresIn,
+      expiresAt,
     };
   }
 

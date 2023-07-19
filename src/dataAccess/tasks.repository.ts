@@ -414,7 +414,7 @@ export class TaskRepository {
           UserTask
       INNER JOIN Tasks ON UserTask.Task_Id = Tasks.Id
       WHERE
-          UserTask.User_Id = :userId
+          UserTask.User_Id = :userId AND Tasks.Visibility = 1
       ORDER BY Tasks.Order
     `,
       { userId },
@@ -501,7 +501,7 @@ export class TaskRepository {
           UserTask
       INNER JOIN Tasks ON UserTask.Task_Id = Tasks.Id
       WHERE
-          UserTask.User_Id = :userId AND UserTask.Accepted = 1
+          UserTask.User_Id = :userId AND UserTask.Accepted = 1 AND Tasks.Visibility = 1
     `,
       { userId },
     );

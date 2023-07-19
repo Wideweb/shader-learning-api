@@ -10,6 +10,7 @@ import {
   UpdateModuleDescriptionDto,
   UpdateModuleDto,
   UpdateModuleNameDto,
+  UpdateModulePageHeaderImageDto,
 } from '@/dtos/modules.dto';
 
 class ModuleRoute implements Routes {
@@ -63,6 +64,15 @@ class ModuleRoute implements Routes {
       hasAllPermissions(['module_edit']),
       validationMiddleware(UpdateModuleCoverDto, 'body'),
       this.controller.updateCover,
+    );
+
+    this.router.get(`${this.path}/:id/pageHeaderImage`, hasAllPermissions(['module_view']), this.controller.getPageHeaderImage);
+
+    this.router.put(
+      `${this.path}/:id/pageHeaderImage`,
+      hasAllPermissions(['module_edit']),
+      validationMiddleware(UpdateModulePageHeaderImageDto, 'body'),
+      this.controller.updatePageHeaderImage,
     );
 
     this.router.put(`${this.path}/:id/toggleLock`, hasAllPermissions(['module_edit']), this.controller.toggleLock);
