@@ -66,6 +66,8 @@ CREATE TABLE `Modules`(
 	`CreatedBy` INT NOT NULL,
 	`Locked` TINYINT DEFAULT 1,
 	`Order` INT NOT NULL,
+	`Cover` TINYINT DEFAULT 1,
+	`PageHeaderImage` TINYINT DEFAULT 1,
 
 	PRIMARY KEY (`Id`),
 	FOREIGN KEY (`CreatedBy`) REFERENCES `Users`(`Id`)
@@ -119,6 +121,21 @@ CREATE TABLE `TaskChannels`(
 	`Index` INT NOT NULL,
 
 	PRIMARY KEY (`Task_Id`, `Index`),
+	FOREIGN KEY (`Task_Id`) REFERENCES `Tasks`(`Id`)
+)
+
+/*
+TASK LINTER RULE
+*/
+CREATE TABLE `TaskLinterRules`(
+	`Id` INT NOT NULL AUTO_INCREMENT,
+    `Task_Id` INT,
+	`Keyword` TEXT NOT NULL,
+	`Message` TEXT DEFAULT NULL,
+	--   0 - info | 1 - warning | 2 - error;
+    `Severity` TINYINT DEFAULT 0,
+
+	PRIMARY KEY (`Id`),
 	FOREIGN KEY (`Task_Id`) REFERENCES `Tasks`(`Id`)
 )
 
@@ -293,4 +310,17 @@ CREATE TABLE `UserPermissions`(
 	PRIMARY KEY (`User_Id`, `Permission_Id`) ,
 	FOREIGN KEY (`User_Id`) REFERENCES `Users`(`Id`),
 	FOREIGN KEY (`Permission_Id`) REFERENCES `Permissions`(`Id`)
+);
+
+/*
+FEEDBACK
+*/
+CREATE TABLE `Feedback`(
+    `Id` INT NOT NULL AUTO_INCREMENT,
+	`AuthorName` nvarchar(255) NOT NULL,
+	`AuthorTitle` nvarchar(255) NOT NULL,
+	`Message` TEXT DEFAULT NULL,
+	`Order` INT NOT NULL,
+
+	PRIMARY KEY (`Id`)
 );

@@ -157,6 +157,8 @@ export class UserRepository {
       FROM 
         Users
       LEFT JOIN UserTask ON Users.Id = UserTask.User_Id AND UserTask.Accepted = 1
+      LEFT JOIN Tasks ON UserTask.Task_Id = Tasks.Id
+      WHERE Tasks.Id IS NULL OR Tasks.Visibility = 1
       GROUP BY Users.Id, Users.UserName
       ORDER BY \`Rank\` DESC
       LIMIT 1000
@@ -173,9 +175,10 @@ export class UserRepository {
         SUM(IFNULL(UserTask.Score, 0)) AS \`Rank\`,
         COUNT(UserTask.Task_Id) AS Solved
       FROM 
-      Users
-        LEFT JOIN UserTask ON Users.Id = UserTask.User_Id AND UserTask.Accepted = 1
-      WHERE Users.Id = :userId
+        Users
+      LEFT JOIN UserTask ON Users.Id = UserTask.User_Id AND UserTask.Accepted = 1
+      LEFT JOIN Tasks ON UserTask.Task_Id = Tasks.Id
+      WHERE Users.Id = :userId AND (Tasks.Id IS NULL OR Tasks.Visibility = 1)
       GROUP BY Users.Id, Users.UserName
       ORDER BY \`Rank\` DESC
       LIMIT 1

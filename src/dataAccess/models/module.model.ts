@@ -5,6 +5,8 @@ export interface ModuleModel {
   CreatedBy: number;
   Order: number;
   Locked: 0 | 1;
+  Cover: 0 | 1;
+  PageHeaderImage: 0 | 1;
 }
 
 export interface ModuleListModel {
@@ -14,6 +16,7 @@ export interface ModuleListModel {
   Order: number;
   Locked: 0 | 1;
   Tasks: number;
+  Cover: 0 | 1;
 }
 
 export interface UserModuleListModel {
@@ -24,4 +27,5 @@ export interface UserModuleListModel {
   Locked: 0 | 1;
   Tasks: number;
   AcceptedTasks: number;
+  Cover: 0 | 1;
 }

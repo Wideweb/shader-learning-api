@@ -49,10 +49,21 @@ export class TaskDto {
   animationSteps: number | null;
 
   animationStepTime: number | null;
+
+  rules: TaskLinterRule[];
 }
 
 export class TaskChannelDto {
   index: number;
+}
+
+export class TaskLinterRule {
+  id: number;
+  default: boolean;
+  keyword: string;
+  message: string;
+  // 0 - info | 1 - warning | 2 - error;
+  severity: number;
 }
 
 export class CreateTaskDto {
@@ -112,6 +123,9 @@ export class CreateTaskDto {
 
   @IsOptional()
   animationStepTime: number | null;
+
+  @IsArray()
+  rules: TaskLinterRule[];
 }
 
 export class CreateTaskChannelDto {

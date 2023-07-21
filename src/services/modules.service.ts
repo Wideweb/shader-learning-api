@@ -5,6 +5,8 @@ import moduleRepository from '@/dataAccess/modules.repository';
 import { ModuleNameNotUniqueException } from '@/exceptions/ModuleNameNotUniqueException';
 import { ModuleModel } from '@/dataAccess/models/module.model';
 import taskService from './tasks.service';
+import amazonFileStorage from './amazonFileStorage';
+import tempStorage from './tempStorage';
 
 class ModulesService {
   public async createModule(module: CreateModuleDto, userId: number): Promise<number> {
@@ -21,10 +23,24 @@ class ModulesService {
       CreatedBy: userId,
       Order: order,
       Locked: module.locked ? 1 : 0,
+      Cover: module.cover ? 1 : 0,
+      PageHeaderImage: module.pageHeaderImage ? 1 : 0,
     });
 
     if (moduleId < 0) {
       throw new HttpException(500, 'Module create error');
+    }
+
+    if (module.cover) {
+      const file = await tempStorage.get(module.cover);
+      await amazonFileStorage.save(`Modules/${moduleId}`, `cover`, file);
+      await tempStorage.remove(module.cover);
+    }
+
+    if (module.pageHeaderImage) {
+      const file = await tempStorage.get(module.pageHeaderImage);
+      await amazonFileStorage.save(`Modules/${moduleId}`, `page-header`, file);
+      await tempStorage.remove(module.pageHeaderImage);
     }
 
     return moduleId;
@@ -45,10 +61,24 @@ class ModulesService {
       CreatedBy: findModule.CreatedBy,
       Order: findModule.Order,
       Locked: module.locked ? 1 : 0,
+      Cover: module.cover ? 1 : 0,
+      PageHeaderImage: module.pageHeaderImage ? 1 : 0,
     });
 
     if (!result) {
       throw new HttpException(500, 'Module update error');
+    }
+
+    if (module.cover) {
+      const file = await tempStorage.get(module.cover);
+      await amazonFileStorage.save(`Modules/${module.id}`, `cover`, file);
+      await tempStorage.remove(module.cover);
+    }
+
+    if (module.pageHeaderImage) {
+      const file = await tempStorage.get(module.pageHeaderImage);
+      await amazonFileStorage.save(`Modules/${module.id}`, `page-header`, file);
+      await tempStorage.remove(module.pageHeaderImage);
     }
 
     return module.id;
@@ -71,6 +101,8 @@ class ModulesService {
       createdBy: { id: user.Id, name: user.UserName },
       locked: module.Locked == 1,
       tasks,
+      cover: module.Cover == 1,
+      pageHeaderImage: module.PageHeaderImage == 1,
     };
   }
 
@@ -91,6 +123,8 @@ class ModulesService {
       createdBy: { id: user.Id, name: user.UserName },
       locked: module.Locked == 1,
       tasks,
+      cover: module.Cover == 1,
+      pageHeaderImage: module.PageHeaderImage == 1,
     };
   }
 
@@ -104,6 +138,7 @@ class ModulesService {
       tasks: module.Tasks,
       order: module.Order,
       locked: module.Locked == 1,
+      cover: module.Cover == 1,
     }));
   }
 
@@ -118,6 +153,7 @@ class ModulesService {
       acceptedTasks: module.AcceptedTasks,
       order: module.Order,
       locked: module.Locked == 1,
+      cover: module.Cover == 1,
     }));
   }
 
@@ -170,6 +206,64 @@ class ModulesService {
     }
 
     return true;
+  }
+
+  public async updateCover(moduleId: number, fileId: string): Promise<boolean> {
+    const module: ModuleModel = await moduleRepository.findById(moduleId);
+    if (module == null) {
+      throw new HttpException(404, `Module with id=${moduleId} doesn't exist`);
+    }
+
+    if (fileId) {
+      const file = await tempStorage.get(fileId);
+      await amazonFileStorage.save(`Modules/${module.Id}`, `cover`, file);
+      await tempStorage.remove(fileId);
+      module.Cover = 1;
+    } else {
+      module.Cover = 0;
+    }
+
+    const result = await moduleRepository.updateModule(module);
+
+    if (!result) {
+      throw new HttpException(500, 'Module description update error');
+    }
+
+    return true;
+  }
+
+  public async getCover(moduleId: number): Promise<Buffer> {
+    const channel = await amazonFileStorage.get(`Modules/${moduleId}`, `cover`);
+    return channel;
+  }
+
+  public async updatePageHeaderImage(moduleId: number, fileId: string): Promise<boolean> {
+    const module: ModuleModel = await moduleRepository.findById(moduleId);
+    if (module == null) {
+      throw new HttpException(404, `Module with id=${moduleId} doesn't exist`);
+    }
+
+    if (fileId) {
+      const file = await tempStorage.get(fileId);
+      await amazonFileStorage.save(`Modules/${module.Id}`, `page-header`, file);
+      await tempStorage.remove(fileId);
+      module.PageHeaderImage = 1;
+    } else {
+      module.PageHeaderImage = 0;
+    }
+
+    const result = await moduleRepository.updateModule(module);
+
+    if (!result) {
+      throw new HttpException(500, 'Module description update error');
+    }
+
+    return true;
+  }
+
+  public async getPageHeaderImage(moduleId: number): Promise<Buffer> {
+    const file = await amazonFileStorage.get(`Modules/${moduleId}`, `page-header`);
+    return file;
   }
 
   public async reorderTasks(moduleId: number, oldOrder: number, newOrder: number): Promise<boolean> {

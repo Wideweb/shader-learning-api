@@ -17,8 +17,8 @@ class DBConnection {
       user: DB_USER,
       password: DB_PASSWORD,
       namedPlaceholders: true,
+      waitForConnections: true,
       connectionLimit: 30,
-      acquireTimeout: 20000,
     });
   }
 
@@ -35,6 +35,14 @@ class DBConnection {
       const result = await this.pool.query(sql, values);
       return result[0] as T;
     } catch (error) {
+      logger.error(`DB Error: ${error.code}; `);
+
+      if (error.code == 'PROTOCOL_CONNECTION_LOST') {
+        logger.info('DB: RECONNECT');
+        await this.connect();
+        return this.query(sql, values);
+      }
+
       logger.error(`SQL QUERY: ${sql}`);
       throw error;
     }

@@ -5,6 +5,7 @@ import {
   TaskChannelModel,
   TaskDataModel,
   TaskFeedbackModel,
+  TaskLinterRule,
   TaskListModel,
   TaskModel,
   UserTaskDataModel,
@@ -166,6 +167,68 @@ export class TaskRepository {
       WHERE Task_Id = :Task_Id AND \`Index\` = :Index
     `,
       { ...channel },
+    );
+    return result;
+  }
+
+  public async getTaskLinterRules(taskId: number): Promise<TaskLinterRule[]> {
+    const result = await dbConnection.query<TaskChannelModel>(
+      `
+      SELECT *
+      FROM TaskLinterRules
+      WHERE TaskLinterRules.Task_Id = :taskId OR TaskLinterRules.Task_Id IS NULL
+    `,
+      { taskId },
+    );
+    return result;
+  }
+
+  public async getTaskOwnedLinterRules(taskId: number): Promise<TaskLinterRule[]> {
+    const result = await dbConnection.query<TaskChannelModel>(
+      `
+      SELECT *
+      FROM TaskLinterRules
+      WHERE TaskLinterRules.Task_Id = :taskId
+    `,
+      { taskId },
+    );
+    return result;
+  }
+
+  public async addTaskLinterRule(rule: TaskLinterRule): Promise<boolean> {
+    const result = await dbConnection.query(
+      `
+      INSERT INTO TaskLinterRules (Task_Id, Keyword, Message, Severity)
+      VALUES (:Task_Id, :Keyword, :Message, :Severity);
+    `,
+      { ...rule },
+    );
+    return result;
+  }
+
+  public async updateTaskLinterRule(rule: TaskLinterRule): Promise<boolean> {
+    const result = await dbConnection.query(
+      `
+      UPDATE Tasks
+        SET 
+          Keyword = :Keyword,
+          Message = :Message,
+          Severity = :Severity,
+        WHERE 
+          Id = ${rule.Id};
+    `,
+      { ...rule },
+    );
+    return result;
+  }
+
+  public async removeTaskLinterRule(id: number): Promise<boolean> {
+    const result = await dbConnection.query(
+      `
+      DELETE FROM TaskLinterRules
+      WHERE Id = :id
+    `,
+      { id },
     );
     return result;
   }
@@ -351,10 +414,36 @@ export class TaskRepository {
           UserTask
       INNER JOIN Tasks ON UserTask.Task_Id = Tasks.Id
       WHERE
-          UserTask.User_Id = :userId
+          UserTask.User_Id = :userId AND Tasks.Visibility = 1
       ORDER BY Tasks.Order
     `,
       { userId },
+    );
+    return result;
+  }
+
+  public async getUserTaskResultsForMe(userId: number, myId: number): Promise<UserTaskResultModel[]> {
+    const result = await dbConnection.query<UserTaskResultModel>(
+      `
+      SELECT
+        Tasks.Id,
+        Tasks.Module_Id,
+        Tasks.Name,
+        Tasks.Order,
+        Tasks.Cost,
+        UserTask.Score,
+        UserTask.Accepted,
+        UserTask.Rejected,
+        IF(Tasks.Order = 0, 0, IF(ISNULL(myUserTask.Task_Id), 1, 0)) AS \`Locked\`
+      FROM
+        UserTask
+      INNER JOIN Tasks ON UserTask.Task_Id = Tasks.Id
+      LEFT JOIN UserTask myUserTask ON myUserTask.User_Id = :myId AND myUserTask.Task_Id = Tasks.Id
+      WHERE
+        UserTask.User_Id = :userId AND Tasks.Visibility = 1
+      ORDER BY Tasks.Order
+    `,
+      { userId, myId },
     );
     return result;
   }
@@ -412,7 +501,7 @@ export class TaskRepository {
           UserTask
       INNER JOIN Tasks ON UserTask.Task_Id = Tasks.Id
       WHERE
-          UserTask.User_Id = :userId AND UserTask.Accepted = 1
+          UserTask.User_Id = :userId AND UserTask.Accepted = 1 AND Tasks.Visibility = 1
     `,
       { userId },
     );

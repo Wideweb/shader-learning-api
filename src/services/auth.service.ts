@@ -9,7 +9,6 @@ import { isEmpty } from '@utils/util';
 import userRepository from '@dataAccess/users.repository';
 import permissionRepository from '@dataAccess/permissions.repository';
 import { UserModel } from '@dataAccess/models/user.model';
-import { UserNameNotFoundExcrption } from '@exceptions/UserNameNotFoundException';
 import { PasswordMatchException } from '@exceptions/PasswordMatchException';
 import { EmailNotUniqueException } from '@exceptions/EmailNotUniqueException';
 import { UserNameNotUniqueException } from '@exceptions/UserNameNotUniqueException';
@@ -17,6 +16,8 @@ import emailSender from './emailSender';
 import { randomUUID } from 'crypto';
 import { UserNotFoundException } from '@/exceptions/UserNotFoundException';
 import { WrongPasswordResetTokenException } from '@/exceptions/WrongPasswordResetTokenException';
+import { UserEmailNotFoundExcrption } from '@/exceptions/UserEmailNotFoundException copy';
+import { Utils } from './utils';
 
 class AuthService {
   public async signup(userData: CreateUserDto): Promise<{ tokenData: TokenData; user: User }> {
@@ -63,8 +64,8 @@ class AuthService {
   public async login(userData: LoginUserDto): Promise<{ tokenData: TokenData; user: User }> {
     if (isEmpty(userData)) throw new HttpException(400, 'userData is empty');
 
-    const findUser: UserModel = await userRepository.findUserByName(userData.name);
-    if (!findUser) throw new UserNameNotFoundExcrption(userData.name);
+    const findUser: UserModel = await userRepository.findUserByEmail(userData.email);
+    if (!findUser) throw new UserEmailNotFoundExcrption(userData.email);
 
     const isPasswordMatching: boolean = await compare(userData.password, findUser.Password);
     if (!isPasswordMatching) throw new PasswordMatchException();
@@ -141,8 +142,10 @@ class AuthService {
     return {
       accessToken: accessToken.token,
       accessTokenLife: accessToken.expiresIn,
+      accessTokenExpiresAt: accessToken.expiresAt,
       refreshToken: refreshToken.token,
       refreshTokenLife: refreshToken.expiresIn,
+      refreshTokenExpiresAt: refreshToken.expiresAt,
     };
   }
 
@@ -171,25 +174,29 @@ class AuthService {
     return accessToken;
   }
 
-  private createAccessToken(user: UserModel, permissions: string[], sessionId: number): { token: string; expiresIn: number } {
+  private createAccessToken(user: UserModel, permissions: string[], sessionId: number): { token: string; expiresIn: number; expiresAt: number } {
     const storedData: DataStoredInToken = { id: user.Id, permissions, sessionId };
     const secret: string = ACCESS_TOKEN_SECRET;
     const expiresIn = Number.parseInt(ACCESS_TOKEN_LIFE);
+    const expiresAt = expiresIn > 0 ? new Date().getTime() + expiresIn * 1000 : -1;
 
     return {
       token: sign(storedData, secret, { expiresIn }),
       expiresIn,
+      expiresAt,
     };
   }
 
-  private createRefreshToken(user: UserModel, sessionId: number): { token: string; expiresIn: number } {
+  private createRefreshToken(user: UserModel, sessionId: number): { token: string; expiresIn: number; expiresAt: number } {
     const storedData: DataStoredInRefreshToken = { id: user.Id, sessionId };
     const secret: string = REFRESH_TOKEN_SECRET;
     const expiresIn = Number.parseInt(REFRESH_TOKEN_LIFE);
+    const expiresAt = expiresIn > 0 ? new Date().getTime() + expiresIn * 1000 : -1;
 
     return {
       token: sign(storedData, secret, expiresIn > 0 ? { expiresIn } : null),
       expiresIn,
+      expiresAt,
     };
   }
 

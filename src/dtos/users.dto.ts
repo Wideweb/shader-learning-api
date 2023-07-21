@@ -13,7 +13,7 @@ export class CreateUserDto {
 
 export class LoginUserDto {
   @IsString()
-  public name: string;
+  public email: string;
 
   @IsString()
   public password: string;

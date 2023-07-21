@@ -9,6 +9,8 @@ export class ModuleDto {
   createdBy: { id: number; name: string };
   tasks: TaskListDto[];
   locked: boolean;
+  cover: boolean;
+  pageHeaderImage: boolean;
 }
 
 export class CreateModuleDto {
@@ -20,6 +22,12 @@ export class CreateModuleDto {
 
   @IsBoolean()
   locked: boolean;
+
+  @IsString()
+  cover: string;
+
+  @IsString()
+  pageHeaderImage: string;
 }
 
 export class UpdateModuleDto extends CreateModuleDto {
@@ -37,6 +45,16 @@ export class UpdateModuleDescriptionDto {
   description: string;
 }
 
+export class UpdateModuleCoverDto {
+  @IsString()
+  file: string;
+}
+
+export class UpdateModulePageHeaderImageDto {
+  @IsString()
+  file: string;
+}
+
 export class ModuleTaskReorderDto {
   @IsNumber()
   oldOrder: number;
@@ -52,6 +70,7 @@ export interface ModuleListDto {
   tasks: number;
   order: number;
   locked: boolean;
+  cover: boolean;
 }
 
 export interface UserModuleListDto {
@@ -62,6 +81,7 @@ export interface UserModuleListDto {
   acceptedTasks: number;
   order: number;
   locked: boolean;
+  cover: boolean;
 }
 
 export interface ModuleUserProgressDto {
@@ -72,6 +92,8 @@ export interface ModuleUserProgressDto {
   createdBy: { id: number; name: string };
   tasks: ModuleUserTaskProgressDto[];
   locked: boolean;
+  cover: boolean;
+  pageHeaderImage: boolean;
 }
 
 export interface ModuleUserTaskProgressDto {
