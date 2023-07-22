@@ -23,7 +23,7 @@ class AmazonFileStorage {
       const buffer = await Utils.streamToBuffer(this.s3Client.getObject(options).createReadStream());
       return buffer;
     } catch (err) {
-      logger.error(`AmazonFileStorage::get | fileName:${fileName}, directory:${directory}, bucketName:${AWS_BUCKET}, error:${err.message}`);
+      logger.warn(`AmazonFileStorage::get | fileName:${fileName}, directory:${directory}, bucketName:${AWS_BUCKET}, error:${err.message}`);
     }
 
     return null;
