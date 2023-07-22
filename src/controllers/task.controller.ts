@@ -31,9 +31,6 @@ class TasksController {
     try {
       const taskData: UpdateTaskDto = req.body;
 
-      // console.log(taskData);
-      // console.log(req.file?.path);
-
       const id = await taskService.updateTask(taskData);
       res.status(200).json(id);
     } catch (error) {
@@ -70,6 +67,8 @@ class TasksController {
       const taskId: number = parseInt(req.params.id);
       const value: boolean = req.body.value;
 
+      logger.info(`TaskApi::like | userId:${userData?.id}; taskId:${taskId}; value:${value}.`);
+
       const updated = await taskService.like(userData.id, taskId, value);
 
       const likes = await taskService.getLikesNumber(taskId);
@@ -86,6 +85,8 @@ class TasksController {
       const userData: User = req.user;
       const taskId: number = parseInt(req.params.id);
       const value: boolean = req.body.value;
+
+      logger.info(`TaskApi::dislike | userId:${userData?.id}; taskId:${taskId}; value:${value}.`);
 
       const updated = await taskService.dislike(userData.id, taskId, value);
 
@@ -122,7 +123,7 @@ class TasksController {
     try {
       const userData: User = req.user;
       const taskId: number = parseInt(req.params.id);
-      logger.info(`Get user task id = ${JSON.stringify(req.params)}`);
+
       const userTask: UserTaskDto = await taskService.getTaskForUser(userData.id, taskId);
 
       res.status(200).json(userTask);
@@ -152,6 +153,8 @@ class TasksController {
       const taskId: number = parseInt(req.params.id);
       const taskData: TaskSubmitDto = req.body;
 
+      logger.info(`TaskApi::submit | userId:${userData?.id}; taskId:${taskId}; match:${taskData?.match}.`);
+
       taskData.id = taskId;
 
       const TaskSubmitData: TaskSubmitResultDto = await taskService.submitTask(userData, taskData);
@@ -177,6 +180,16 @@ class TasksController {
       const userData: User = req.user;
       const taskId: number = parseInt(req.params.id);
       const feedback: TaskFeedbackDto = req.body;
+
+      logger.info(
+        `TaskApi::PostFeedback | 
+        userId:${userData?.id}; 
+        taskId:${taskId}; 
+        strictRuntime:${feedback.strictRuntime}; 
+        unclearDescription:${feedback.unclearDescription}; 
+        other:${feedback.other}; 
+        message:${feedback.message};`,
+      );
 
       await taskService.saveFeedback(userData.id, taskId, feedback);
       res.status(200).json(true);

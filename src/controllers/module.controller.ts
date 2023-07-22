@@ -14,6 +14,7 @@ import {
 } from '@/dtos/modules.dto';
 import moduleService from '@/services/modules.service';
 import taskService from '@/services/tasks.service';
+import { logger } from '@/utils/logger';
 
 class ModuleController {
   public create = async (req: RequestWithUser, res: Response, next: NextFunction) => {
@@ -137,6 +138,7 @@ class ModuleController {
       const canEditModule = userData && userData.permissions.some(p => p == 'module_edit');
 
       if (module.locked && !canEditModule) {
+        logger.info(`ModuleApi::view no permissions | userId:${req.user?.id}; moduleId:${moduleId};.`);
         res.status(403).json(null);
         return;
       }

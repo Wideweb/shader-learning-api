@@ -4,19 +4,34 @@ import { ModuleListModel, ModuleModel, UserModuleListModel } from './models/modu
 
 export class ModuleRepository {
   public async findById(id: number): Promise<ModuleModel> {
-    const result = await dbConnection.query<ModuleModel>(`SELECT * FROM Modules WHERE Id = :id LIMIT 1`, { id });
-    return result[0];
+    try {
+      const result = await dbConnection.query<ModuleModel>(`SELECT * FROM Modules WHERE Id = :id LIMIT 1`, { id });
+      return result[0];
+    } catch (err) {
+      logger.error(`ModuleRepository::findById | id:${id}; error: ${err.message}`);
+      return null;
+    }
   }
 
   public async findByName(name: string): Promise<ModuleModel> {
-    const result = await dbConnection.query<ModuleModel>(`SELECT * FROM Modules WHERE Name = :name LIMIT 1`, { name });
-    return result[0];
+    try {
+      const result = await dbConnection.query<ModuleModel>(`SELECT * FROM Modules WHERE Name = :name LIMIT 1`, { name });
+      return result[0];
+    } catch (err) {
+      logger.error(`ModuleRepository::findByName | name:${name}; error: ${err.message}`);
+      return null;
+    }
   }
 
   public async getLastModuleOrder(): Promise<number> {
-    const result = await dbConnection.query<number>(`SELECT Modules.Order as \`Order\` FROM Modules ORDER BY Modules.Order DESC LIMIT 1`);
-    const order = Number.parseInt(result[0] ? result[0]['Order'] : -1);
-    return Number.isNaN(order) ? -1 : order;
+    try {
+      const result = await dbConnection.query<number>(`SELECT Modules.Order as \`Order\` FROM Modules ORDER BY Modules.Order DESC LIMIT 1`);
+      const order = Number.parseInt(result[0] ? result[0]['Order'] : -1);
+      return Number.isNaN(order) ? -1 : order;
+    } catch (err) {
+      logger.error(`ModuleRepository::getLastModuleOrder | error: ${err.message}`);
+      return -1;
+    }
   }
 
   public async createModule(module: ModuleModel): Promise<number> {
@@ -31,7 +46,7 @@ export class ModuleRepository {
       return result.insertId;
     } catch (err) {
       logger.error(
-        `DB: Failed to create module | Name:${module.Name}, Description:${module.Description}, CreatedBy:${module.CreatedBy}, Locked:${module.Locked}, Order:${module.Order}, Cover:${module.Order}, error:${err.message}`,
+        `ModuleRepository::createModule | Name:${module.Name}, Description:${module.Description}, CreatedBy:${module.CreatedBy}, Locked:${module.Locked}, Order:${module.Order}, Cover:${module.Order}, error:${err.message}`,
       );
       return -1;
     }
@@ -52,15 +67,16 @@ export class ModuleRepository {
       return true;
     } catch (err) {
       logger.error(
-        `DB: Failed to update module | Name:${module.Name}, Description:${module.Description}, CreatedBy:${module.CreatedBy},  Locked:${module.Locked}, Order:${module.Order}, Cover:${module.Order}, error:${err.message}`,
+        `ModuleRepository::updateModule | Name:${module.Name}, Description:${module.Description}, CreatedBy:${module.CreatedBy},  Locked:${module.Locked}, Order:${module.Order}, Cover:${module.Order}, error:${err.message}`,
       );
       return false;
     }
   }
 
   public async getModuleList(): Promise<ModuleListModel[]> {
-    const result = await dbConnection.query<ModuleListModel>(
-      `
+    try {
+      const result = await dbConnection.query<ModuleListModel>(
+        `
       SELECT
         Modules.Id,
         Modules.Name,
@@ -80,13 +96,18 @@ export class ModuleRepository {
       ORDER BY Modules.Order
       LIMIT 100
     `,
-    );
-    return result;
+      );
+      return result;
+    } catch (err) {
+      logger.error(`ModuleRepository::getModuleList | error: ${err.message}`);
+      return [];
+    }
   }
 
   public async getUserModuleList(userId: number): Promise<UserModuleListModel[]> {
-    const result = await dbConnection.query<UserModuleListModel>(
-      `
+    try {
+      const result = await dbConnection.query<UserModuleListModel>(
+        `
       SELECT
         Modules.Id,
         Modules.Name,
@@ -117,9 +138,13 @@ export class ModuleRepository {
       ORDER BY Modules.Order
       LIMIT 100
     `,
-      { userId },
-    );
-    return result;
+        { userId },
+      );
+      return result;
+    } catch (err) {
+      logger.error(`ModuleRepository::getUserModuleList | userId:${userId}; error: ${err.message}`);
+      return [];
+    }
   }
 
   public async rerderTasks(moduleId: number, oldOrder: number, newOrder: number): Promise<boolean> {
@@ -135,7 +160,8 @@ export class ModuleRepository {
         { oldOrder, newOrder, moduleId },
       );
       return true;
-    } catch {
+    } catch (err) {
+      logger.error(`ModuleRepository::rerderTasks | moduleId:${moduleId}; oldOrder:${oldOrder}; newOrder:${newOrder}; error: ${err.message}`);
       return false;
     }
   }

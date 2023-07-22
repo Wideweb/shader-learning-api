@@ -34,7 +34,7 @@ export class TaskRepository {
       );
       return true;
     } catch (err) {
-      logger.error(`DB: Failed to update task | taskId:${taskId}`);
+      logger.error(`TaskRepository::updateData | taskId:${taskId}; error:${err.message}`);
       return false;
     }
   }
@@ -58,34 +58,49 @@ export class TaskRepository {
       );
       return true;
     } catch (err) {
-      logger.error(`DB: Failed to update user task | userId:${userId}; taskId:${taskId}`);
+      logger.error(`TaskRepository::updateUserTaskData | userId:${userId}; taskId:${taskId}; error:${err.message}`);
       return false;
     }
   }
 
   public async findById(id: number): Promise<TaskModel> {
-    const result = await dbConnection.query<TaskModel>(`SELECT * FROM Tasks WHERE Id = :id LIMIT 1`, { id });
-    return result[0];
+    try {
+      const result = await dbConnection.query<TaskModel>(`SELECT * FROM Tasks WHERE Id = :id LIMIT 1`, { id });
+      return result[0];
+    } catch (err) {
+      logger.error(`TaskRepository::findById | id: ${id}; error: ${err.message}`);
+      return null;
+    }
   }
 
   public async findByName(name: string): Promise<TaskModel> {
-    const result = await dbConnection.query<TaskModel>(`SELECT * FROM Tasks WHERE Name = :name LIMIT 1`, { name });
-    return result[0];
+    try {
+      const result = await dbConnection.query<TaskModel>(`SELECT * FROM Tasks WHERE Name = :name LIMIT 1`, { name });
+      return result[0];
+    } catch (err) {
+      logger.error(`TaskRepository::findByName | name: ${name}; error: ${err.message}`);
+      return null;
+    }
   }
 
   public async getLastTaskOrder(moduleId: number): Promise<number> {
-    const result = await dbConnection.query<number>(
-      `
+    try {
+      const result = await dbConnection.query<number>(
+        `
       SELECT Tasks.Order as \`Order\`
       FROM Tasks
       WHERE Tasks.Module_Id = :moduleId
       ORDER BY Tasks.Order DESC
       LIMIT 1
     `,
-      { moduleId },
-    );
-    const order = Number.parseInt(result[0] ? result[0]['Order'] : -1);
-    return Number.isNaN(order) ? -1 : order;
+        { moduleId },
+      );
+      const order = Number.parseInt(result[0] ? result[0]['Order'] : -1);
+      return Number.isNaN(order) ? -1 : order;
+    } catch (err) {
+      logger.error(`TaskRepository::getLastTaskOrder | moduleId: ${moduleId}; error: ${err.message}`);
+      return -1;
+    }
   }
 
   public async createTask(task: TaskModel): Promise<number> {
@@ -100,7 +115,7 @@ export class TaskRepository {
       return result.insertId;
     } catch (err) {
       logger.error(
-        `DB: Failed to create task | Name:${task.Name}, Threshold:${task.Threshold}, Order:${task.Order}, Cost:${task.Cost}, error:${err.message}`,
+        `TaskRepository::createTask | Name:${task.Name}; Threshold:${task.Threshold}; Order:${task.Order}; Cost:${task.Cost}; error:${err.message}`,
       );
       return -1;
     }
@@ -131,152 +146,212 @@ export class TaskRepository {
       return true;
     } catch (err) {
       logger.error(
-        `DB: Failed to update task | Name:${task.Name}, Threshold:${task.Threshold}, Order:${task.Order}, Cost:${task.Cost}, error:${err.message}`,
+        `TaskRepository::updateTask | Name:${task.Name}; Threshold:${task.Threshold}; Order:${task.Order}; Cost:${task.Cost}; error:${err.message}`,
       );
       return false;
     }
   }
 
   public async getTaskChannels(taskId: number): Promise<TaskChannelModel[]> {
-    const result = await dbConnection.query<TaskChannelModel>(
-      `
+    try {
+      const result = await dbConnection.query<TaskChannelModel>(
+        `
       SELECT *
       FROM TaskChannels
       WHERE TaskChannels.Task_Id = :taskId
     `,
-      { taskId },
-    );
-    return result;
+        { taskId },
+      );
+      return result;
+    } catch (err) {
+      logger.error(`TaskRepository::addTaskChannel | taskId: ${taskId}; error: ${err.message}`);
+      return [];
+    }
   }
 
   public async addTaskChannel(channel: TaskChannelModel): Promise<boolean> {
-    const result = await dbConnection.query(
-      `
+    try {
+      const result = await dbConnection.query(
+        `
       INSERT INTO TaskChannels (Task_Id, \`Index\`)
       VALUES (:Task_Id, :Index);
     `,
-      { ...channel },
-    );
-    return result;
+        { ...channel },
+      );
+      return result;
+    } catch (err) {
+      logger.error(`TaskRepository::addTaskChannel | taskId: ${channel.Task_Id}; index: ${channel.Index}; error: ${err.message}`);
+      return false;
+    }
   }
 
   public async removeTaskChannel(channel: TaskChannelModel): Promise<boolean> {
-    const result = await dbConnection.query(
-      `
+    try {
+      const result = await dbConnection.query(
+        `
       DELETE FROM TaskChannels
       WHERE Task_Id = :Task_Id AND \`Index\` = :Index
     `,
-      { ...channel },
-    );
-    return result;
+        { ...channel },
+      );
+      return result;
+    } catch (err) {
+      logger.error(`TaskRepository::removeTaskChannel | taskId: ${channel.Task_Id}; index: ${channel.Index}; error: ${err.message}`);
+      return false;
+    }
   }
 
   public async getTaskLinterRules(taskId: number): Promise<TaskLinterRule[]> {
-    const result = await dbConnection.query<TaskChannelModel>(
-      `
+    try {
+      const result = await dbConnection.query<TaskChannelModel>(
+        `
       SELECT *
       FROM TaskLinterRules
       WHERE TaskLinterRules.Task_Id = :taskId OR TaskLinterRules.Task_Id IS NULL
     `,
-      { taskId },
-    );
-    return result;
+        { taskId },
+      );
+      return result;
+    } catch (err) {
+      logger.error(`TaskRepository::getTaskLinterRules | taskId: ${taskId}; error: ${err.message}`);
+      return [];
+    }
   }
 
   public async getTaskOwnedLinterRules(taskId: number): Promise<TaskLinterRule[]> {
-    const result = await dbConnection.query<TaskChannelModel>(
-      `
+    try {
+      const result = await dbConnection.query<TaskChannelModel>(
+        `
       SELECT *
       FROM TaskLinterRules
       WHERE TaskLinterRules.Task_Id = :taskId
     `,
-      { taskId },
-    );
-    return result;
+        { taskId },
+      );
+      return result;
+    } catch (err) {
+      logger.error(`TaskRepository::getTaskOwnedLinterRules | taskId: ${taskId}; error: ${err.message}`);
+      return [];
+    }
   }
 
   public async addTaskLinterRule(rule: TaskLinterRule): Promise<boolean> {
-    const result = await dbConnection.query(
-      `
+    try {
+      const result = await dbConnection.query(
+        `
       INSERT INTO TaskLinterRules (Task_Id, Keyword, Message, Severity)
       VALUES (:Task_Id, :Keyword, :Message, :Severity);
     `,
-      { ...rule },
-    );
-    return result;
+        { ...rule },
+      );
+      return result;
+    } catch (err) {
+      logger.error(
+        `TaskRepository::addTaskLinterRule | id: ${rule.Id}; keyword: ${rule.Keyword}; message: ${rule.Message}; severity: ${rule.Severity}; error: ${err.message}`,
+      );
+      return false;
+    }
   }
 
   public async updateTaskLinterRule(rule: TaskLinterRule): Promise<boolean> {
-    const result = await dbConnection.query(
-      `
-      UPDATE Tasks
+    try {
+      const result = await dbConnection.query(
+        `
+      UPDATE TaskLinterRules
         SET 
           Keyword = :Keyword,
           Message = :Message,
-          Severity = :Severity,
+          Severity = :Severity
         WHERE 
-          Id = ${rule.Id};
+          Id = :Id
     `,
-      { ...rule },
-    );
-    return result;
+        { ...rule },
+      );
+      return result;
+    } catch (err) {
+      logger.error(
+        `TaskRepository::updateTaskLinterRule | id: ${rule.Id}; keyword: ${rule.Keyword}; message: ${rule.Message}; severity: ${rule.Severity}; error: ${err.message}`,
+      );
+      return false;
+    }
   }
 
   public async removeTaskLinterRule(id: number): Promise<boolean> {
-    const result = await dbConnection.query(
-      `
+    try {
+      const result = await dbConnection.query(
+        `
       DELETE FROM TaskLinterRules
       WHERE Id = :id
     `,
-      { id },
-    );
-    return result;
+        { id },
+      );
+      return result;
+    } catch (err) {
+      logger.error(`TaskRepository::removeTaskLinterRule | id: ${id}; error: ${err.message}`);
+      return false;
+    }
   }
 
   public async getLikes(taskId: number): Promise<number> {
-    const result = await dbConnection.query<number>(
-      `
+    try {
+      const result = await dbConnection.query<number>(
+        `
       SELECT COUNT (*) as \`Count\`
       FROM
           UserTask
       WHERE
           UserTask.Liked = 1 AND UserTask.Task_Id = :taskId
     `,
-      { taskId },
-    );
-    return result[0]['Count'] || 0;
+        { taskId },
+      );
+      return result[0]['Count'] || 0;
+    } catch (err) {
+      logger.error(`TaskRepository::getLikes | taskId: ${taskId}; error: ${err.message}`);
+      return 0;
+    }
   }
 
   public async getDislikes(taskId: number): Promise<number> {
-    const result = await dbConnection.query<number>(
-      `
+    try {
+      const result = await dbConnection.query<number>(
+        `
       SELECT COUNT (*) as \`Count\`
       FROM
           UserTask
       WHERE
           UserTask.Liked = 0 AND UserTask.Task_Id = :taskId
     `,
-      { taskId },
-    );
-    return result[0]['Count'] || 0;
+        { taskId },
+      );
+      return result[0]['Count'] || 0;
+    } catch (err) {
+      logger.error(`TaskRepository::getDislikes | taskId: ${taskId}; error: ${err.message}`);
+      return 0;
+    }
   }
 
   public async getModuleTaskList(moduleId: number): Promise<TaskListModel[]> {
-    const result = await dbConnection.query<TaskListModel>(
-      `
+    try {
+      const result = await dbConnection.query<TaskListModel>(
+        `
       SELECT Tasks.Id, Tasks.Name, Tasks.Order, Tasks.Threshold, Tasks.Cost, Tasks.Visibility
       FROM Tasks
       WHERE Tasks.Module_Id = :moduleId
       ORDER BY Tasks.Order
       LIMIT 100
     `,
-      { moduleId },
-    );
-    return result;
+        { moduleId },
+      );
+      return result;
+    } catch (err) {
+      logger.error(`TaskRepository::getModuleTaskList | error: ${err.message}`);
+      return [];
+    }
   }
 
   public async getTaskList(): Promise<TaskListModel[]> {
-    const result = await dbConnection.query<TaskListModel>(`
+    try {
+      const result = await dbConnection.query<TaskListModel>(`
       SELECT
         Tasks.Id,
         Tasks.Name,
@@ -289,7 +364,11 @@ export class TaskRepository {
       ORDER BY Tasks.Order
       LIMIT 100
     `);
-    return result;
+      return result;
+    } catch (err) {
+      logger.error(`TaskRepository::getTaskList | error: ${err.message}`);
+      return [];
+    }
   }
 
   public async createUserTask(task: UserTaskModel): Promise<boolean> {
@@ -302,7 +381,15 @@ export class TaskRepository {
         { ...task, Data: JSON.stringify(task.Data) },
       );
       return true;
-    } catch {
+    } catch (err) {
+      logger.error(`TaskRepository::createUserTask | 
+      userId:${task.User_Id}; 
+      taskId:${task.Task_Id}; 
+      score:${task.Score}; 
+      accepted:${task.Accepted}; 
+      rejected:${task.Rejected}; 
+      data: ${task.Data ? '[Data]' : 'null'};
+      error:${err.message}`);
       return false;
     }
   }
@@ -320,7 +407,16 @@ export class TaskRepository {
         { ...task, Data: JSON.stringify(task.Data) },
       );
       return true;
-    } catch {
+    } catch (err) {
+      logger.error(`TaskRepository::updateUserTask | 
+      userId:${task.User_Id}; 
+      taskId:${task.Task_Id}; 
+      score:${task.Score}; 
+      rejected:${task.Rejected}; 
+      accepted:${task.Accepted}; 
+      data: ${task.Data ? '[Data]' : 'null'};
+      acceptedAt:${task.AcceptedAt}; 
+      error:${err.message}`);
       return false;
     }
   }
@@ -335,7 +431,15 @@ export class TaskRepository {
         { ...task, Data: JSON.stringify(task.Data) },
       );
       return true;
-    } catch {
+    } catch (err) {
+      logger.error(`TaskRepository::saveUserTaskSubmission | 
+      userId:${task.User_Id}; 
+      taskId:${task.Task_Id}; 
+      score:${task.Score}; 
+      accepted:${task.Accepted}; 
+      data: ${task.Data ? '[Data]' : 'null'};
+      at:${task.At}; 
+      error:${err.message}`);
       return false;
     }
   }
@@ -362,14 +466,16 @@ export class TaskRepository {
         { liked, userId, taskId },
       );
       return true;
-    } catch {
+    } catch (err) {
+      logger.error(`TaskRepository::setLiked | userId:${userId}; taskId:${taskId}; value:${value}; error:${err.message}`);
       return false;
     }
   }
 
   public async findUserTask(userId: number, taskId: number): Promise<UserTaskModel> {
-    const result = await dbConnection.query<UserTaskModel>(
-      `
+    try {
+      const result = await dbConnection.query<UserTaskModel>(
+        `
       SELECT *
       FROM
           UserTask
@@ -377,14 +483,19 @@ export class TaskRepository {
           UserTask.User_Id = :userId AND UserTask.Task_Id = :taskId
       LIMIT 1
     `,
-      { userId, taskId },
-    );
-    return result[0] && result[0].At ? { ...result[0], AcceptedAt: Utils.addTimezoneOffset(result[0].At) } : result[0];
+        { userId, taskId },
+      );
+      return result[0] && result[0].At ? { ...result[0], AcceptedAt: Utils.addTimezoneOffset(result[0].At) } : result[0];
+    } catch (err) {
+      logger.error(`TaskRepository::findUserTask | userId:${userId}; taskId:${taskId}; error:${err.message}`);
+      return null;
+    }
   }
 
   public async getUserTaskSubmissions(userId: number, taskId: number): Promise<UserTaskSubmissionModel[]> {
-    const result = await dbConnection.query<UserTaskSubmissionModel[]>(
-      `
+    try {
+      const result = await dbConnection.query<UserTaskSubmissionModel[]>(
+        `
       SELECT *
       FROM
         UserTaskSubmissions
@@ -393,14 +504,19 @@ export class TaskRepository {
       ORDER BY
         UserTaskSubmissions.At DESC
     `,
-      { userId, taskId },
-    );
-    return (result || []).map(it => ({ ...it, At: Utils.addTimezoneOffset(it.At) }));
+        { userId, taskId },
+      );
+      return (result || []).map(it => ({ ...it, At: Utils.addTimezoneOffset(it.At) }));
+    } catch (err) {
+      logger.error(`TaskRepository::getUserTaskSubmissions | userId:${userId}; taskId:${taskId}; error:${err.message}`);
+      return [];
+    }
   }
 
   public async getUserTaskResults(userId: number): Promise<UserTaskResultModel[]> {
-    const result = await dbConnection.query<UserTaskResultModel>(
-      `
+    try {
+      const result = await dbConnection.query<UserTaskResultModel>(
+        `
       SELECT
         Tasks.Id,
         Tasks.Module_Id,
@@ -417,14 +533,19 @@ export class TaskRepository {
           UserTask.User_Id = :userId AND Tasks.Visibility = 1
       ORDER BY Tasks.Order
     `,
-      { userId },
-    );
-    return result;
+        { userId },
+      );
+      return result;
+    } catch (err) {
+      logger.error(`TaskRepository::getUserTaskResults | userId:${userId}; error:${err.message}`);
+      return [];
+    }
   }
 
   public async getUserTaskResultsForMe(userId: number, myId: number): Promise<UserTaskResultModel[]> {
-    const result = await dbConnection.query<UserTaskResultModel>(
-      `
+    try {
+      const result = await dbConnection.query<UserTaskResultModel>(
+        `
       SELECT
         Tasks.Id,
         Tasks.Module_Id,
@@ -443,14 +564,19 @@ export class TaskRepository {
         UserTask.User_Id = :userId AND Tasks.Visibility = 1
       ORDER BY Tasks.Order
     `,
-      { userId, myId },
-    );
-    return result;
+        { userId, myId },
+      );
+      return result;
+    } catch (err) {
+      logger.error(`TaskRepository::getUserTaskResultsForMe | userId:${userId}; myId:${myId}; error:${err.message}`);
+      return [];
+    }
   }
 
   public async getUserModuleTaskResults(userId: number, moduleId: number): Promise<UserTaskResultModel[]> {
-    const result = await dbConnection.query<UserTaskResultModel>(
-      `
+    try {
+      const result = await dbConnection.query<UserTaskResultModel>(
+        `
       SELECT 
         Tasks.Id,
         Tasks.Module_Id,
@@ -467,14 +593,19 @@ export class TaskRepository {
           Tasks.Module_Id = :moduleId AND Tasks.Visibility = 1
       ORDER BY Tasks.Order
     `,
-      { userId, moduleId },
-    );
-    return result;
+        { userId, moduleId },
+      );
+      return result;
+    } catch (err) {
+      logger.error(`TaskRepository::getUserModuleTaskResults | userId:${userId}; moduleId:${moduleId}; error:${err.message}`);
+      return [];
+    }
   }
 
   public async findNext(userId: number): Promise<TaskModel> {
-    const result = await dbConnection.query<TaskModel>(
-      `
+    try {
+      const result = await dbConnection.query<TaskModel>(
+        `
         SELECT
             Tasks.*
         FROM
@@ -488,14 +619,19 @@ export class TaskRepository {
             )
         ORDER BY Tasks.Order
     `,
-      { userId },
-    );
-    return result[0];
+        { userId },
+      );
+      return result[0];
+    } catch (err) {
+      logger.error(`TaskRepository::findNext | userId:${userId}; error:${err.message}`);
+      return null;
+    }
   }
 
   public async getUserScore(userId: number): Promise<number> {
-    const result = await dbConnection.query<number>(
-      `
+    try {
+      const result = await dbConnection.query<number>(
+        `
       SELECT SUM(UserTask.Score) as \`UserScore\`
       FROM
           UserTask
@@ -503,9 +639,13 @@ export class TaskRepository {
       WHERE
           UserTask.User_Id = :userId AND UserTask.Accepted = 1 AND Tasks.Visibility = 1
     `,
-      { userId },
-    );
-    return result[0]['UserScore'] || 0;
+        { userId },
+      );
+      return result[0]['UserScore'] || 0;
+    } catch (err) {
+      logger.error(`TaskRepository::getUserScore | userId:${userId}; error:${err.message}`);
+      return 0;
+    }
   }
 
   public async saveFeedback(feedback: TaskFeedbackModel): Promise<boolean> {
@@ -519,7 +659,9 @@ export class TaskRepository {
       );
       return true;
     } catch (err) {
-      logger.error(`DB: Failed to save feedback | User:${feedback.User_Id}, Task:${feedback.Task_Id}, error:${err.message}`);
+      logger.error(
+        `TaskRepository::saveFeedback | userId:${feedback.User_Id}; taskId:${feedback.Task_Id}; message:${feedback.Message}; error:${err.message}`,
+      );
       return false;
     }
   }

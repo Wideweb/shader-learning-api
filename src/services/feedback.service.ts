@@ -3,7 +3,7 @@ import { FeedbackListDto } from '@/dtos/feedback.dto';
 
 class FeedbackService {
   public async getFeedbackList(): Promise<FeedbackListDto[]> {
-    const feedbacks = await feedbackRepository.getModuleList();
+    const feedbacks = await feedbackRepository.getAll();
 
     return feedbacks.map(item => ({
       authorName: item.AuthorName,

@@ -10,7 +10,7 @@ class TempStorage {
     return new Promise((resolve, reject) => {
       fs.readFile(toFilePath, (error, data) => {
         if (error) {
-          logger.error(`FileStorage | error: ${error.message}`);
+          logger.error(`TempStorage::get | fileName: ${fileName}; error: ${error.message}`);
           reject(error);
           return;
         }
@@ -26,7 +26,7 @@ class TempStorage {
     return new Promise((resolve, reject) => {
       fs.unlink(toFilePath, error => {
         if (error) {
-          logger.error(`FileStorage | error: ${error.message}`);
+          logger.error(`TempStorage::remove | fileName: ${fileName}; | error: ${error.message}`);
           reject(error);
           return;
         }

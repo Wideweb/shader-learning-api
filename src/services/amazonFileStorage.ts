@@ -23,7 +23,7 @@ class AmazonFileStorage {
       const buffer = await Utils.streamToBuffer(this.s3Client.getObject(options).createReadStream());
       return buffer;
     } catch (err) {
-      logger.error(`Failed to load file | fileName:${fileName}, directory:${directory}, bucketName:${AWS_BUCKET}, error:${err.message}`);
+      logger.error(`AmazonFileStorage::get | fileName:${fileName}, directory:${directory}, bucketName:${AWS_BUCKET}, error:${err.message}`);
     }
 
     return null;
@@ -40,7 +40,7 @@ class AmazonFileStorage {
       const result = await this.s3Client.upload(params).promise();
       return result.Location;
     } catch (err) {
-      logger.error(`Failed to upload file | fileName:${fileName}, directory:${directory}, bucketName:${AWS_BUCKET}, error:${err.message}`);
+      logger.error(`AmazonFileStorage::save | fileName:${fileName}, directory:${directory}, bucketName:${AWS_BUCKET}, error:${err.message}`);
     }
 
     return null;
