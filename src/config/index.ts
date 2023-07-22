@@ -1,6 +1,8 @@
 import { config } from 'dotenv';
 config({ path: `.env.${process.env.NODE_ENV || 'development'}.local` });
 
+export const IS_PRODUCTION = process.env.NODE_ENV === 'production';
+export const IS_DEVELOPMENT = process.env.NODE_ENV !== 'production';
 export const CREDENTIALS = process.env.CREDENTIALS === 'true';
 export const {
   NODE_ENV,

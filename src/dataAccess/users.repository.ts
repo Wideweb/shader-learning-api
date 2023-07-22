@@ -5,18 +5,33 @@ import dbConnection from './db-connection';
 
 export class UserRepository {
   public async findUserById(userId: number): Promise<UserModel> {
-    const result = await dbConnection.query<UserModel>(`SELECT * FROM Users WHERE Id = :userId LIMIT 1`, { userId });
-    return result[0];
+    try {
+      const result = await dbConnection.query<UserModel>(`SELECT * FROM Users WHERE Id = :userId LIMIT 1`, { userId });
+      return result[0];
+    } catch (err) {
+      logger.error(`UserRepository::findUserById | userId:${userId}; error:${err.message}`);
+      return null;
+    }
   }
 
   public async findUserByEmail(email: string): Promise<UserModel> {
-    const result = await dbConnection.query<UserModel>(`SELECT * FROM Users WHERE Email = :email LIMIT 1`, { email });
-    return result[0];
+    try {
+      const result = await dbConnection.query<UserModel>(`SELECT * FROM Users WHERE Email = :email LIMIT 1`, { email });
+      return result[0];
+    } catch (err) {
+      logger.error(`UserRepository::findUserByEmail | email:${email}; error:${err.message}`);
+      return null;
+    }
   }
 
   public async findUserByName(userName: string): Promise<UserModel> {
-    const result = await dbConnection.query<UserModel>(`SELECT * FROM Users WHERE UserName = :userName LIMIT 1`, { userName });
-    return result[0];
+    try {
+      const result = await dbConnection.query<UserModel>(`SELECT * FROM Users WHERE UserName = :userName LIMIT 1`, { userName });
+      return result[0];
+    } catch (err) {
+      logger.error(`UserRepository::findUserByName | userName:${userName}; error:${err.message}`);
+      return null;
+    }
   }
 
   public async createUser(user: UserModel): Promise<boolean> {
@@ -29,7 +44,17 @@ export class UserRepository {
         { ...user },
       );
       return true;
-    } catch {
+    } catch (err) {
+      logger.error(
+        `UserRepository::createUser |
+        name:${user.UserName}
+        email:${user.Email};
+        role:${user.Role_Id};
+        failedLoginAttemptsCount:${user.FailedLoginAttemptsCount};
+        password:${user.Password ? '[HIDDEN]' : ''};
+        passwordSalt:${user.PasswordSalt ? '[HIDDEN]' : ''};
+        error:${err.message}`,
+      );
       return false;
     }
   }
@@ -45,7 +70,7 @@ export class UserRepository {
       );
       return result.insertId;
     } catch (err) {
-      logger.error(`DB: Failed to create session | userId:${userId}, refreshToken:${refreshToken}`);
+      logger.error(`UserRepository::createUserSession | userId:${userId}; refreshToken:${refreshToken}; error:${err.message}`);
       return -1;
     }
   }
@@ -68,7 +93,8 @@ export class UserRepository {
         { sessionId, token },
       );
       return true;
-    } catch {
+    } catch (err) {
+      logger.error(`UserRepository::setRefreshToken | sessionId:${sessionId}; token:${token}; error:${err.message}`);
       return false;
     }
   }
@@ -86,7 +112,8 @@ export class UserRepository {
         { sessionId, refreshToken: null, finishedAt: Utils.getUTC() },
       );
       return true;
-    } catch {
+    } catch (err) {
+      logger.error(`UserRepository::finishUserSession | sessionId:${sessionId}; error:${err.message}`);
       return false;
     }
   }
@@ -104,7 +131,8 @@ export class UserRepository {
         { userId, refreshToken: null, finishedAt: Utils.getUTC() },
       );
       return true;
-    } catch {
+    } catch (err) {
+      logger.error(`UserRepository::invalidateUserSessions | userId:${userId}; error:${err.message}`);
       return false;
     }
   }
@@ -122,7 +150,8 @@ export class UserRepository {
         { userId, token },
       );
       return true;
-    } catch {
+    } catch (err) {
+      logger.error(`UserRepository::setResetPasswordToken | userId:${userId}; token:${token}; error:${err.message}`);
       return false;
     }
   }
@@ -142,33 +171,46 @@ export class UserRepository {
         { userId, password, passwordSalt },
       );
       return true;
-    } catch {
+    } catch (err) {
+      logger.error(
+        `UserRepository::createUser |
+        userId:${userId};
+        password:${password ? '[HIDDEN]' : ''};
+        passwordSalt:${passwordSalt ? '[HIDDEN]' : ''};
+        error:${err.message}`,
+      );
       return false;
     }
   }
 
   public async getRankedList(): Promise<UserRankedListModel[]> {
-    const result = await dbConnection.query<UserRankedListModel>(`
-      SELECT
-        Users.Id,
-        Users.UserName,
-        SUM(IFNULL(UserTask.Score, 0)) AS \`Rank\`,
-        COUNT(UserTask.Task_Id) AS Solved
-      FROM 
-        Users
-      LEFT JOIN UserTask ON Users.Id = UserTask.User_Id AND UserTask.Accepted = 1
-      LEFT JOIN Tasks ON UserTask.Task_Id = Tasks.Id
-      WHERE Tasks.Id IS NULL OR Tasks.Visibility = 1
-      GROUP BY Users.Id, Users.UserName
-      ORDER BY \`Rank\` DESC
-      LIMIT 1000
-    `);
-    return result;
+    try {
+      const result = await dbConnection.query<UserRankedListModel>(`
+        SELECT
+          Users.Id,
+          Users.UserName,
+          SUM(IFNULL(UserTask.Score, 0)) AS \`Rank\`,
+          COUNT(UserTask.Task_Id) AS Solved
+        FROM 
+          Users
+        LEFT JOIN UserTask ON Users.Id = UserTask.User_Id AND UserTask.Accepted = 1
+        LEFT JOIN Tasks ON UserTask.Task_Id = Tasks.Id
+        WHERE Tasks.Id IS NULL OR Tasks.Visibility = 1
+        GROUP BY Users.Id, Users.UserName
+        ORDER BY \`Rank\` DESC
+        LIMIT 1000
+      `);
+      return result;
+    } catch (err) {
+      logger.error(`UserRepository::getRankedList | error:${err.message}`);
+      return [];
+    }
   }
 
   public async findProfile(userId: number): Promise<UserProfileModel> {
-    const result = await dbConnection.query<UserProfileModel>(
-      `
+    try {
+      const result = await dbConnection.query<UserProfileModel>(
+        `
       SELECT
         Users.Id,
         Users.UserName,
@@ -183,9 +225,13 @@ export class UserRepository {
       ORDER BY \`Rank\` DESC
       LIMIT 1
     `,
-      { userId },
-    );
-    return result[0];
+        { userId },
+      );
+      return result[0];
+    } catch (err) {
+      logger.error(`UserRepository::findProfile | error:${err.message}`);
+      return null;
+    }
   }
 }
 

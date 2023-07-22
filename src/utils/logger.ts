@@ -2,7 +2,8 @@ import { existsSync, mkdirSync } from 'fs';
 import { join } from 'path';
 import winston from 'winston';
 import winstonDaily from 'winston-daily-rotate-file';
-import { LOG_DIR } from '@config';
+import { PapertrailTransport } from 'winston-papertrail-transport';
+import { IS_PRODUCTION, LOG_DIR } from '@config';
 
 // logs dir
 const logDir: string = join(__dirname, LOG_DIR);
@@ -26,16 +27,12 @@ const logger = winston.createLogger({
     logFormat,
   ),
   transports: [
-    // debug log setting
-    new winstonDaily({
-      level: 'debug',
-      datePattern: 'YYYY-MM-DD',
-      dirname: logDir + '/debug', // log file /logs/debug/*.log in save
-      filename: `%DATE%.log`,
-      maxFiles: 30, // 30 Days saved
-      json: false,
-      zippedArchive: true,
+    new PapertrailTransport({
+      host: 'logs7.papertrailapp.com',
+      port: 52234,
+      level: 'info',
     }),
+
     // error log setting
     new winstonDaily({
       level: 'error',
@@ -47,18 +44,34 @@ const logger = winston.createLogger({
       json: false,
       zippedArchive: true,
     }),
+
+    // debug log setting
+    ...(IS_PRODUCTION
+      ? []
+      : [
+          new winstonDaily({
+            level: 'debug',
+            datePattern: 'YYYY-MM-DD',
+            dirname: logDir + '/debug', // log file /logs/debug/*.log in save
+            filename: `%DATE%.log`,
+            maxFiles: 30, // 30 Days saved
+            json: false,
+            zippedArchive: true,
+          }),
+        ]),
   ],
 });
 
 logger.add(
   new winston.transports.Console({
+    level: IS_PRODUCTION ? 'info' : 'debug',
     format: winston.format.combine(winston.format.splat(), winston.format.colorize()),
   }),
 );
 
 const stream = {
   write: (message: string) => {
-    logger.info(message.substring(0, message.lastIndexOf('\n')));
+    logger.debug(message.substring(0, message.lastIndexOf('\n')));
   },
 };
 

@@ -8,6 +8,9 @@ class AuthController {
   public signUp = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const userData: CreateUserDto = req.body;
+
+      logger.info(`AuthApi::signUp | name:${userData?.name}; email:${userData?.email}; password:${userData?.password ? '[HIDDEN]' : ''}.`);
+
       const { tokenData, user } = await authService.signup(userData);
 
       res.setHeader('Set-Cookie', [authService.createCookie(tokenData.accessToken, tokenData.accessTokenLife)]);
@@ -20,6 +23,9 @@ class AuthController {
   public logIn = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const userData: LoginUserDto = req.body;
+
+      logger.info(`AuthApi::logIn | email:${userData?.email}; password:${userData?.password ? '[HIDDEN]' : ''}.`);
+
       const { tokenData, user } = await authService.login(userData);
 
       res.setHeader('Set-Cookie', [authService.createCookie(tokenData.accessToken, tokenData.accessTokenLife)]);
@@ -31,6 +37,8 @@ class AuthController {
 
   public logOut = async (req: RequestWithUser, res: Response, next: NextFunction) => {
     try {
+      logger.info(`AuthApi::logOut | userId:${req.user?.id}; sessionId:${req.sessionId}.`);
+
       await authService.logout(req.sessionId);
 
       res.setHeader('Set-Cookie', ['Authorization=; Max-age=0']);
@@ -51,6 +59,9 @@ class AuthController {
   public refreshToken = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const refreshToken = req.body.refreshToken;
+
+      logger.info(`AuthApi::refreshToken | refreshToken:${refreshToken ? '[HIDDEN]' : ''}.`);
+
       const accessToken = await authService.refreshAccessToken(refreshToken);
 
       res.setHeader('Set-Cookie', [authService.createCookie(accessToken.token, accessToken.expiresIn)]);
@@ -63,6 +74,9 @@ class AuthController {
   public requestResetPassword = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const payload: RequestResetPasswordDto = req.body;
+
+      logger.info(`AuthApi::requestResetPassword | email:${payload?.email}.`);
+
       await authService.sendPasswordResetLink(payload.email);
       res.status(200).json(true);
     } catch (error) {
@@ -73,6 +87,9 @@ class AuthController {
   public resetPassword = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const payload: ResetPasswordDto = req.body;
+
+      logger.info(`AuthApi::resetPassword | userId:${payload?.userId}; token:${payload?.token}; password:${payload?.password ? '[HIDDEN]' : ''}.`);
+
       const { tokenData, user } = await authService.resetPassword(payload.userId, payload.token, payload.password);
       res.status(200).json({ tokenData, user });
     } catch (error) {

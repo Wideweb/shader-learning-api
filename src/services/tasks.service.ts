@@ -14,7 +14,6 @@ import {
 } from '@dtos/tasks.dto';
 import taskRepository from '@dataAccess/tasks.repository';
 import { TaskModel, UserTaskModel, UserTaskSubmissionModel } from '@dataAccess/models/task.model';
-import { logger } from '@utils/logger';
 import { User } from '@/interfaces/users.interface';
 import amazonFileStorage from './amazonFileStorage';
 import { TaskNameNotUniqueException } from '@/exceptions/TaskNameNotUniqueException';
@@ -67,15 +66,17 @@ class TaskService {
       await tempStorage.remove(fileId);
     }
 
-    (task.rules || []).forEach(async rule => {
-      await taskRepository.addTaskLinterRule({
-        Id: -1,
-        Task_Id: taskId,
-        Keyword: rule.keyword,
-        Message: rule.message,
-        Severity: rule.severity,
-      });
-    });
+    await Promise.all(
+      (task.rules || []).map(async rule => {
+        await taskRepository.addTaskLinterRule({
+          Id: -1,
+          Task_Id: taskId,
+          Keyword: rule.keyword,
+          Message: rule.message,
+          Severity: rule.severity,
+        });
+      }),
+    );
 
     return taskId;
   }
@@ -144,27 +145,33 @@ class TaskService {
       .filter(([a, b]) => JSON.stringify(a) != JSON.stringify(b))
       .map(([rule]) => rule as TaskLinterRule);
 
-    rulesToCreate.forEach(
-      async rule =>
-        await taskRepository.addTaskLinterRule({
-          Id: -1,
-          Task_Id: task.id,
-          Keyword: rule.keyword,
-          Message: rule.message,
-          Severity: rule.severity,
-        }),
+    await Promise.all(
+      rulesToCreate.map(
+        async rule =>
+          await taskRepository.addTaskLinterRule({
+            Id: -1,
+            Task_Id: task.id,
+            Keyword: rule.keyword,
+            Message: rule.message,
+            Severity: rule.severity,
+          }),
+      ),
     );
-    rulesToUpdate.forEach(
-      async rule =>
-        await taskRepository.updateTaskLinterRule({
-          Id: -1,
-          Task_Id: task.id,
-          Keyword: rule.keyword,
-          Message: rule.message,
-          Severity: rule.severity,
-        }),
+
+    await Promise.all(
+      rulesToUpdate.map(
+        async rule =>
+          await taskRepository.updateTaskLinterRule({
+            Id: rule.id,
+            Task_Id: task.id,
+            Keyword: rule.keyword,
+            Message: rule.message,
+            Severity: rule.severity,
+          }),
+      ),
     );
-    rulesToRemove.forEach(async rule => await taskRepository.removeTaskLinterRule(rule.Id));
+
+    await Promise.all(rulesToRemove.map(async rule => await taskRepository.removeTaskLinterRule(rule.Id)));
 
     return task.id;
   }

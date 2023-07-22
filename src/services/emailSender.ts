@@ -20,7 +20,7 @@ class EmailSender {
         text: text,
       });
     } catch (error) {
-      logger.error(error, 'email not sent');
+      logger.error(`EmailSender::send | email:${email}; subject:${subject}; text:${text}; error:${error.message}.`);
     }
   }
 }

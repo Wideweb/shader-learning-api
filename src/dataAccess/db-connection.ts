@@ -24,9 +24,10 @@ class DBConnection {
 
   async connect(): Promise<void> {
     try {
+      logger.info(`DBConnection::connect`);
       await this.create();
     } catch (error) {
-      logger.error(`DBConnection|error connecting: ${error.stack}`);
+      logger.error(`DBConnection::connect | error: ${error.stack} .`);
     }
   }
 
@@ -35,15 +36,14 @@ class DBConnection {
       const result = await this.pool.query(sql, values);
       return result[0] as T;
     } catch (error) {
-      logger.error(`DB Error: ${error.code}; `);
+      logger.error(`DBConnection::query | error: ${error.code}.`);
 
       if (error.code == 'PROTOCOL_CONNECTION_LOST') {
-        logger.info('DB: RECONNECT');
         await this.connect();
         return this.query(sql, values);
       }
 
-      logger.error(`SQL QUERY: ${sql}`);
+      logger.error(`DBConnection::query | sql: ${sql}`);
       throw error;
     }
   }
