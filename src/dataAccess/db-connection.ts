@@ -5,11 +5,7 @@ import { createPool, Pool } from 'mysql2/promise';
 class DBConnection {
   private pool: Pool;
 
-  async create() {
-    if (this.pool) {
-      return;
-    }
-
+  private createPool() {
     this.pool = createPool({
       host: DB_HOST,
       port: Number.parseInt(DB_PORT),
@@ -22,12 +18,13 @@ class DBConnection {
     });
   }
 
-  async connect(): Promise<void> {
+  connect(): void {
     try {
-      logger.info(`DBConnection::connect`);
-      await this.create();
+      logger.info(`DBConnection::connect start`);
+      this.createPool();
+      logger.info(`DBConnection::connect success`);
     } catch (error) {
-      logger.error(`DBConnection::connect | error: ${error.stack} .`);
+      logger.error(`DBConnection::connect fail | error: ${error.stack} .`);
     }
   }
 
@@ -39,7 +36,7 @@ class DBConnection {
       logger.error(`DBConnection::query | error: ${error.code}.`);
 
       if (error.code == 'PROTOCOL_CONNECTION_LOST') {
-        await this.connect();
+        this.connect();
         return this.query(sql, values);
       }
 
