@@ -33,13 +33,13 @@ class ModulesService {
 
     if (module.cover) {
       const file = await tempStorage.get(module.cover);
-      await amazonFileStorage.save(`Modules/${moduleId}`, `cover`, file);
+      await amazonFileStorage.save(`Modules/${moduleId}/cover`, file);
       await tempStorage.remove(module.cover);
     }
 
     if (module.pageHeaderImage) {
       const file = await tempStorage.get(module.pageHeaderImage);
-      await amazonFileStorage.save(`Modules/${moduleId}`, `page-header`, file);
+      await amazonFileStorage.save(`Modules/${moduleId}/page-header`, file);
       await tempStorage.remove(module.pageHeaderImage);
     }
 
@@ -71,13 +71,13 @@ class ModulesService {
 
     if (module.cover) {
       const file = await tempStorage.get(module.cover);
-      await amazonFileStorage.save(`Modules/${module.id}`, `cover`, file);
+      await amazonFileStorage.save(`Modules/${module.id}/cover`, file);
       await tempStorage.remove(module.cover);
     }
 
     if (module.pageHeaderImage) {
       const file = await tempStorage.get(module.pageHeaderImage);
-      await amazonFileStorage.save(`Modules/${module.id}`, `page-header`, file);
+      await amazonFileStorage.save(`Modules/${module.id}/page-header`, file);
       await tempStorage.remove(module.pageHeaderImage);
     }
 
@@ -216,7 +216,7 @@ class ModulesService {
 
     if (fileId) {
       const file = await tempStorage.get(fileId);
-      await amazonFileStorage.save(`Modules/${module.Id}`, `cover`, file);
+      await amazonFileStorage.save(`Modules/${module.Id}/cover`, file);
       await tempStorage.remove(fileId);
       module.Cover = 1;
     } else {
@@ -233,7 +233,7 @@ class ModulesService {
   }
 
   public async getCover(moduleId: number): Promise<Buffer> {
-    const channel = await amazonFileStorage.get(`Modules/${moduleId}`, `cover`);
+    const channel = await amazonFileStorage.get(`Modules/${moduleId}/cover`);
     return channel;
   }
 
@@ -245,7 +245,7 @@ class ModulesService {
 
     if (fileId) {
       const file = await tempStorage.get(fileId);
-      await amazonFileStorage.save(`Modules/${module.Id}`, `page-header`, file);
+      await amazonFileStorage.save(`Modules/${module.Id}/page-header`, file);
       await tempStorage.remove(fileId);
       module.PageHeaderImage = 1;
     } else {
@@ -262,7 +262,7 @@ class ModulesService {
   }
 
   public async getPageHeaderImage(moduleId: number): Promise<Buffer> {
-    const file = await amazonFileStorage.get(`Modules/${moduleId}`, `page-header`);
+    const file = await amazonFileStorage.get(`Modules/${moduleId}/page-header`);
     return file;
   }
 

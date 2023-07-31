@@ -665,6 +665,29 @@ export class TaskRepository {
       return false;
     }
   }
+
+  public async getNextModuleTask(userId: number, taskId: number): Promise<{ Id: number; Module_Id: number }> {
+    try {
+      const result = await dbConnection.query<number>(
+        `
+          SELECT Tasks.Id, Tasks.Module_Id
+          FROM Tasks
+          LEFT JOIN Tasks currTask ON currTask.Id = :taskId
+          LEFT JOIN Modules currModule ON currModule.Id = currTask.Module_Id
+          LEFT JOIN Modules taskModule ON taskModule.Id = Tasks.Module_Id
+          LEFT JOIN UserTask ON UserTask.Task_Id = Tasks.Id AND UserTask.User_Id = :userId
+          WHERE Tasks.Visibility = 1 AND (ISNULL(UserTask.Accepted) OR UserTask.Accepted != 1) AND taskModule.Order >= currModule.Order
+          ORDER BY taskModule.Order, Tasks.Order
+          LIMIT 1
+      `,
+        { userId, taskId },
+      );
+      return result[0];
+    } catch (err) {
+      logger.error(`TaskRepository::getNextModuleTask | userId:${userId}; error:${err.message}`);
+      return null;
+    }
+  }
 }
 
 const taskRepository = new TaskRepository();

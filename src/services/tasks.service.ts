@@ -61,7 +61,7 @@ class TaskService {
     for (let i = 0; i < channels.length; i++) {
       const fileId = channels[i].file;
       const file = await tempStorage.get(fileId);
-      await amazonFileStorage.save(`Tasks/${taskId}`, `channel_${i}`, file);
+      await amazonFileStorage.save(`Tasks/${taskId}/channel_${i}`, file);
       await taskRepository.addTaskChannel({ Task_Id: taskId, Index: i });
       await tempStorage.remove(fileId);
     }
@@ -131,7 +131,7 @@ class TaskService {
     for (let i = 0; i < newChannels.length; i++) {
       const fileId = newChannels[i].file;
       const file = await tempStorage.get(fileId);
-      await amazonFileStorage.save(`Tasks/${task.id}`, `channel_${i}`, file);
+      await amazonFileStorage.save(`Tasks/${task.id}/channel_${i}`, file);
       await tempStorage.remove(fileId);
     }
 
@@ -239,7 +239,7 @@ class TaskService {
   }
 
   public async getTaskChannel(taskId: number, index: number): Promise<Buffer> {
-    const channel = await amazonFileStorage.get(`Tasks/${taskId}`, `channel_${index}`);
+    const channel = await amazonFileStorage.get(`Tasks/${taskId}/channel_${index}`);
     return channel;
   }
 
@@ -447,13 +447,19 @@ class TaskService {
       await taskRepository.createUserTask(userTaskToSave);
     }
 
+    const moduleTask = await taskRepository.getNextModuleTask(user.id, task.id);
+
     const result: TaskSubmitResultDto = {
       accepted,
+      statusChanged: !userTask || userTask.Accepted !== userTaskToSave.Accepted,
       score,
       match,
       at,
       vertexShader: task.vertexCodeEditable ? taskSubmitData.vertexShader : task.vertexShader,
       fragmentShader: task.fragmentCodeEditable ? taskSubmitData.fragmentShader : task.fragmentShader,
+      moduleFinished: task.moduleId != moduleTask?.Module_Id,
+      nextTaskId: moduleTask?.Id,
+      nextModuleId: moduleTask?.Module_Id,
     };
     return result;
   }
