@@ -4,7 +4,7 @@ import { NextFunction, Request, Response } from 'express';
 class FileController {
   public get = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const buffer = amazonFileStorage.get('Tasks', req.params.id);
+      const buffer = amazonFileStorage.get(`Tasks/${req.params.id}`);
       res.status(200).send(buffer);
     } catch (error) {
       next(error);
