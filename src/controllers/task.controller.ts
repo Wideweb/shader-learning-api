@@ -13,6 +13,8 @@ import { logger } from '@utils/logger';
 import taskService from '@services/tasks.service';
 import { User } from '@interfaces/users.interface';
 import { RequestWithUser } from '@interfaces/auth.interface';
+import userActivityService from '@/services/user-activity/user-activity.service';
+import { UserActivityType } from '@/services/user-activity/user-activity-type';
 
 class TasksController {
   public create = async (req: RequestWithUser, res: Response, next: NextFunction) => {
@@ -74,6 +76,10 @@ class TasksController {
       const likes = await taskService.getLikesNumber(taskId);
       const dislikes = await taskService.getDislikesNumber(taskId);
 
+      if (value) {
+        await userActivityService.addUserAction(userData.id, UserActivityType.TaskLike);
+      }
+
       res.status(200).json({ likes, dislikes, updated });
     } catch (error) {
       next(error);
@@ -92,6 +98,10 @@ class TasksController {
 
       const likes = await taskService.getLikesNumber(taskId);
       const dislikes = await taskService.getDislikesNumber(taskId);
+
+      if (value) {
+        await userActivityService.addUserAction(userData.id, UserActivityType.TaskDislike);
+      }
 
       res.status(200).json({ likes, dislikes, updated });
     } catch (error) {
@@ -157,8 +167,17 @@ class TasksController {
 
       taskData.id = taskId;
 
-      const TaskSubmitData: TaskSubmitResultDto = await taskService.submitTask(userData, taskData);
-      res.status(200).json(TaskSubmitData);
+      const taskSubmitData: TaskSubmitResultDto = await taskService.submitTask(userData, taskData);
+
+      userActivityService.addUserAction(userData.id, UserActivityType.TaskSubmit);
+      if (!taskSubmitData.acceptedPreviously) {
+        await userActivityService.addUserAction(
+          userData.id,
+          taskSubmitData.accepted ? UserActivityType.TaskSubmitAccepted : UserActivityType.TaskSubmitRejected,
+        );
+      }
+
+      res.status(200).json(taskSubmitData);
     } catch (error) {
       next(error);
     }

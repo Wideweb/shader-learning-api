@@ -12,6 +12,7 @@ import { Routes } from '@interfaces/routes.interface';
 import errorMiddleware from '@middlewares/error.middleware';
 import { logger, stream } from '@utils/logger';
 import dbConnection from './dataAccess/db-connection';
+import userActivityService from './services/user-activity/user-activity.service';
 
 class App {
   public app: express.Application;
@@ -28,6 +29,8 @@ class App {
     this.initializeRoutes(routes);
     this.initializeSwagger();
     this.initializeErrorHandling();
+
+    userActivityService.initialize();
   }
 
   public listen() {
