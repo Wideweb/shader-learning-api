@@ -11,6 +11,11 @@ export class CreateUserDto {
   public password: string;
 }
 
+export class GoogleLoginDto {
+  @IsString()
+  public token: string;
+}
+
 export class LoginUserDto {
   @IsString()
   public email: string;

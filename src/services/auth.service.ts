@@ -17,7 +17,6 @@ import { randomUUID } from 'crypto';
 import { UserNotFoundException } from '@/exceptions/UserNotFoundException';
 import { WrongPasswordResetTokenException } from '@/exceptions/WrongPasswordResetTokenException';
 import { UserEmailNotFoundExcrption } from '@/exceptions/UserEmailNotFoundException copy';
-import { Utils } from './utils';
 
 class AuthService {
   public async signup(userData: CreateUserDto): Promise<{ tokenData: TokenData; user: User }> {
@@ -131,7 +130,7 @@ class AuthService {
     return tokenData;
   }
 
-  private async createSession(user: UserModel, permissions: string[]): Promise<TokenData> {
+  public async createSession(user: UserModel, permissions: string[]): Promise<TokenData> {
     const sessionId = await userRepository.createUserSession(user.Id, null);
 
     const accessToken = this.createAccessToken(user, permissions, sessionId);
@@ -204,7 +203,7 @@ class AuthService {
     return `Authorization=${token}; HttpOnly; Max-Age=${expiresIn};`;
   }
 
-  private async getPermissions(userId: number): Promise<string[]> {
+  public async getPermissions(userId: number): Promise<string[]> {
     const userPermissions = await permissionRepository.getUserAndRolePermissions(userId);
     return userPermissions.map(p => p.Name);
 

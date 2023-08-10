@@ -28,4 +28,5 @@ export const {
   SMTP_USER,
   SMTP_PASSWORD,
   BASE_URL,
+  GOOGLE_OAUTH_CLIENT_ID,
 } = process.env;
