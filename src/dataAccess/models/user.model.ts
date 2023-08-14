@@ -7,6 +7,8 @@ export interface UserModel {
   ResetPasswordToken: string;
   FailedLoginAttemptsCount: number;
   Role_Id: number;
+  Ref: string;
+  CreatedAt: Date;
 }
 
 export interface UserSessionModel {

@@ -17,6 +17,7 @@ import { randomUUID } from 'crypto';
 import { UserNotFoundException } from '@/exceptions/UserNotFoundException';
 import { WrongPasswordResetTokenException } from '@/exceptions/WrongPasswordResetTokenException';
 import { UserEmailNotFoundExcrption } from '@/exceptions/UserEmailNotFoundException copy';
+import { Utils } from './utils';
 
 class AuthService {
   public async signup(userData: CreateUserDto): Promise<{ tokenData: TokenData; user: User }> {
@@ -39,6 +40,8 @@ class AuthService {
       FailedLoginAttemptsCount: 0,
       ResetPasswordToken: null,
       Role_Id: 2,
+      Ref: userData.ref,
+      CreatedAt: Utils.getUTC(),
     });
 
     if (!isUserCreated) throw new HttpException(500, `User is not created`);

@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
-import { CreateUserDto, LoginUserDto, ResetPasswordDto, RequestResetPasswordDto, GoogleSignUpDto, GoogleLoginDto } from '@dtos/users.dto';
+import { CreateUserDto, LoginUserDto, ResetPasswordDto, RequestResetPasswordDto, GoogleLoginDto } from '@dtos/users.dto';
 import { RequestWithUser } from '@interfaces/auth.interface';
 import authService from '@services/auth.service';
 import { logger } from '@/utils/logger';
@@ -23,11 +23,11 @@ class AuthController {
 
   public loginWithGoogle = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { token }: GoogleLoginDto = req.body;
+      const { token, ref }: GoogleLoginDto = req.body;
 
       logger.info(`AuthApi::signUpWithGoogle | token:${token ? '[HIDDEN]' : ''}.`);
 
-      const { tokenData, user } = await oauthService.loginWithGoogle(token);
+      const { tokenData, user } = await oauthService.loginWithGoogle(token, ref);
 
       res.setHeader('Set-Cookie', [authService.createCookie(tokenData.accessToken, tokenData.accessTokenLife)]);
       res.status(201).json({ tokenData, user });

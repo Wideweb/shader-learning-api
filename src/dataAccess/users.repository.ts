@@ -38,8 +38,8 @@ export class UserRepository {
     try {
       await dbConnection.query(
         `
-          INSERT INTO Users (UserName, Email, PasswordSalt, Password, FailedLoginAttemptsCount, Role_Id)
-          VALUES (:UserName, :Email, :PasswordSalt, :Password, :FailedLoginAttemptsCount, :Role_Id);
+          INSERT INTO Users (UserName, Email, PasswordSalt, Password, FailedLoginAttemptsCount, Role_Id, Ref, CreatedAt)
+          VALUES (:UserName, :Email, :PasswordSalt, :Password, :FailedLoginAttemptsCount, :Role_Id, :Ref, :CreatedAt);
       `,
         { ...user },
       );
@@ -50,6 +50,8 @@ export class UserRepository {
         name:${user.UserName}
         email:${user.Email};
         role:${user.Role_Id};
+        ref:${user.Ref};
+        createdAt:${user.CreatedAt};
         failedLoginAttemptsCount:${user.FailedLoginAttemptsCount};
         password:${user.Password ? '[HIDDEN]' : ''};
         passwordSalt:${user.PasswordSalt ? '[HIDDEN]' : ''};
