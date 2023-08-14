@@ -7,6 +7,7 @@ import { UserModel } from '@/dataAccess/models/user.model';
 import userRepository from '@/dataAccess/users.repository';
 import { HttpException } from '@/exceptions/HttpException';
 import { GOOGLE_OAUTH_CLIENT_ID } from '@/config';
+import { Utils } from './utils';
 
 class OAuthService {
   private googleClient: OAuth2Client;
@@ -15,7 +16,7 @@ class OAuthService {
     this.googleClient = new OAuth2Client(GOOGLE_OAUTH_CLIENT_ID);
   }
 
-  public async loginWithGoogle(token: string): Promise<{ tokenData: TokenData; user: User }> {
+  public async loginWithGoogle(token: string, ref: string): Promise<{ tokenData: TokenData; user: User }> {
     const ticket = await this.googleClient.verifyIdToken({
       idToken: token,
       audience: GOOGLE_OAUTH_CLIENT_ID,
@@ -46,6 +47,8 @@ class OAuthService {
         FailedLoginAttemptsCount: 0,
         ResetPasswordToken: null,
         Role_Id: 2,
+        Ref: ref,
+        CreatedAt: Utils.getUTC(),
       });
       if (!isUserCreated) throw new HttpException(500, `User is not created`);
 

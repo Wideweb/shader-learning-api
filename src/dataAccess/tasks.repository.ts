@@ -375,8 +375,8 @@ export class TaskRepository {
     try {
       await dbConnection.query(
         `
-          INSERT INTO UserTask (User_Id, Task_Id, Score, Accepted, Rejected, Data)
-          VALUES (:User_Id, :Task_Id, :Score, :Accepted, :Rejected, :Data);
+          INSERT INTO UserTask (User_Id, Task_Id, Score, Accepted, Rejected, Data, AcceptedAt)
+          VALUES (:User_Id, :Task_Id, :Score, :Accepted, :Rejected, :Data, :AcceptedAt);
       `,
         { ...task, Data: JSON.stringify(task.Data) },
       );
