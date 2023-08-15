@@ -30,6 +30,8 @@ CREATE TABLE `Users`(
 	`ResetPasswordToken` TEXT NOT NULL,
 	`FailedLoginAttemptsCount` INT NOT NULL,
 	`Role_Id` INT NOT NULL,
+	`Ref` TEXT,
+	`CreatedAt` DATETIME,
 
 	PRIMARY KEY (`Id`),
 	FOREIGN KEY (`Role_Id`) REFERENCES `Roles`(`Id`)

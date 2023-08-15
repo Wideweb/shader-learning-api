@@ -1,8 +1,9 @@
 import { NextFunction, Request, Response } from 'express';
-import { CreateUserDto, LoginUserDto, ResetPasswordDto, RequestResetPasswordDto } from '@dtos/users.dto';
+import { CreateUserDto, LoginUserDto, ResetPasswordDto, RequestResetPasswordDto, GoogleLoginDto } from '@dtos/users.dto';
 import { RequestWithUser } from '@interfaces/auth.interface';
 import authService from '@services/auth.service';
 import { logger } from '@/utils/logger';
+import oauthService from '@/services/oauth.service';
 
 class AuthController {
   public signUp = async (req: Request, res: Response, next: NextFunction) => {
@@ -12,6 +13,21 @@ class AuthController {
       logger.info(`AuthApi::signUp | name:${userData?.name}; email:${userData?.email}; password:${userData?.password ? '[HIDDEN]' : ''}.`);
 
       const { tokenData, user } = await authService.signup(userData);
+
+      res.setHeader('Set-Cookie', [authService.createCookie(tokenData.accessToken, tokenData.accessTokenLife)]);
+      res.status(201).json({ tokenData, user });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public loginWithGoogle = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { token, ref }: GoogleLoginDto = req.body;
+
+      logger.info(`AuthApi::signUpWithGoogle | token:${token ? '[HIDDEN]' : ''}.`);
+
+      const { tokenData, user } = await oauthService.loginWithGoogle(token, ref);
 
       res.setHeader('Set-Cookie', [authService.createCookie(tokenData.accessToken, tokenData.accessTokenLife)]);
       res.status(201).json({ tokenData, user });
