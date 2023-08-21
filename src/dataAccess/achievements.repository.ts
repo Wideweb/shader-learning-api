@@ -80,7 +80,7 @@ export class AchievemenstRepository {
             UserAchievements.At
           FROM UserAchievements
           LEFT JOIN Achievements ON Achievements.Id = UserAchievements.Achievement_Id
-          WHERE UserAchievements.User_Id = 1 AND UserAchievements.Viewed != 1
+          WHERE UserAchievements.User_Id = :userId AND UserAchievements.Viewed != 1
           ORDER BY UserAchievements.At
           LIMIT 1000
         `,
@@ -104,7 +104,7 @@ export class AchievemenstRepository {
             UserAchievements.At
           FROM UserAchievements
           LEFT JOIN Achievements ON Achievements.Id = UserAchievements.Achievement_Id
-          WHERE UserAchievements.User_Id = 1
+          WHERE UserAchievements.User_Id = :userId
           ORDER BY UserAchievements.At
           LIMIT 1000
         `,
