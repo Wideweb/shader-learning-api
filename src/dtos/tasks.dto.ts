@@ -216,6 +216,8 @@ export class UserTaskDto {
   disliked: boolean;
 
   submissions: UserTaskSubmissionDto[];
+
+  accepted: boolean;
 }
 
 export class UserTaskSubmissionDto {

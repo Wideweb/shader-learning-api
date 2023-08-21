@@ -349,6 +349,7 @@ class TaskService {
       defaultFragmentShader: task.defaultFragmentShader,
       liked: userTask?.Liked === 1,
       disliked: userTask?.Liked === 0,
+      accepted: userTask?.Accepted === 1,
       submissions: submissions.map(it => ({
         score: it.Score,
         accepted: it.Accepted == 1,
