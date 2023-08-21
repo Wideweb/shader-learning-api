@@ -158,6 +158,8 @@ export class TaskSubmitResultDto {
 
   accepted: boolean;
 
+  acceptedPreviously: boolean;
+
   statusChanged: boolean;
 
   vertexShader: string;

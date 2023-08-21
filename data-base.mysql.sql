@@ -326,3 +326,47 @@ CREATE TABLE `Feedback`(
 
 	PRIMARY KEY (`Id`)
 );
+
+/*
+USER ACTIVITY
+*/
+CREATE TABLE `UserActivity`(
+    `Id` INT NOT NULL AUTO_INCREMENT,
+    `User_Id` INT NOT NULL,
+    `Type` INT NOT NULL,
+	`At` DATETIME,
+
+	PRIMARY KEY (`Id`),
+	FOREIGN KEY (`User_Id`) REFERENCES `Users`(`Id`)
+);
+
+/*
+ACHIEVEMENTS
+*/
+CREATE TABLE `Achievements`(
+    `Id` INT NOT NULL AUTO_INCREMENT,
+    `Name` nvarchar(255) NOT NULL,
+    `Message` TEXT DEFAULT NULL,
+
+	PRIMARY KEY (`Id`)
+);
+
+INSERT INTO Achievements (Id, Name, Message)
+VALUES (1, 'First Step to Mastery', 'You have taken your first step towards mastering the art of coding. Continue to challenge yourself!');
+
+INSERT INTO Achievements (Id, Name, Message)
+VALUES (2, 'Daily Coder', 'Your consistency in completing a coding challenge every day for a week is impressive. Keep up the great work!');
+
+/*
+USER ACHIEVEMENTS
+*/
+CREATE TABLE `UserAchievements`(
+    `Achievement_Id` INT NOT NULL,
+    `User_Id` INT NOT NULL,
+    `At` DATETIME,
+	`Viewed` TINYINT DEFAULT 0,
+
+	PRIMARY KEY (`User_Id`, `Achievement_Id`) ,
+	FOREIGN KEY (`Achievement_Id`) REFERENCES `Achievements`(`Id`),
+	FOREIGN KEY (`User_Id`) REFERENCES `Users`(`Id`)
+);

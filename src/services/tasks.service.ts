@@ -452,6 +452,7 @@ class TaskService {
 
     const result: TaskSubmitResultDto = {
       accepted,
+      acceptedPreviously: userTask && userTask.Accepted == 1,
       statusChanged: !userTask || userTask.Accepted !== userTaskToSave.Accepted,
       score,
       match,
