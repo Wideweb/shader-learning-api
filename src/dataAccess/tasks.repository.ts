@@ -531,7 +531,13 @@ export class TaskRepository {
       INNER JOIN Tasks ON UserTask.Task_Id = Tasks.Id
       WHERE
           UserTask.User_Id = :userId AND Tasks.Visibility = 1
-      ORDER BY Tasks.Order
+      ORDER BY
+        CASE WHEN AcceptedAt IS NOT NULL THEN AcceptedAt ELSE (
+          SELECT UserTaskSubmissions.At FROM UserTaskSubmissions
+          WHERE UserTaskSubmissions.Task_Id = Tasks.Id AND UserTaskSubmissions.User_Id = :userId
+          ORDER BY UserTaskSubmissions.At ASC
+          LIMIT 1
+        ) END ASC
     `,
         { userId },
       );
@@ -562,7 +568,13 @@ export class TaskRepository {
       LEFT JOIN UserTask myUserTask ON myUserTask.User_Id = :myId AND myUserTask.Task_Id = Tasks.Id
       WHERE
         UserTask.User_Id = :userId AND Tasks.Visibility = 1
-      ORDER BY Tasks.Order
+      ORDER BY
+      CASE WHEN UserTask.AcceptedAt IS NOT NULL THEN UserTask.AcceptedAt ELSE (
+        SELECT UserTaskSubmissions.At FROM UserTaskSubmissions
+        WHERE UserTaskSubmissions.Task_Id = UserTask.Task_Id AND UserTaskSubmissions.User_Id = :userId
+        ORDER BY UserTaskSubmissions.At ASC
+        LIMIT 1
+      ) END ASC
     `,
         { userId, myId },
       );

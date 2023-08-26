@@ -197,7 +197,7 @@ export class UserRepository {
           Users
         LEFT JOIN UserTask ON Users.Id = UserTask.User_Id AND UserTask.Accepted = 1
         LEFT JOIN Tasks ON UserTask.Task_Id = Tasks.Id
-        WHERE Tasks.Id IS NULL OR Tasks.Visibility = 1
+        WHERE (Tasks.Id IS NULL OR Tasks.Visibility = 1) AND Users.Role_Id = 2
         GROUP BY Users.Id, Users.UserName
         ORDER BY \`Rank\` DESC
         LIMIT 1000
