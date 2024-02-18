@@ -23,6 +23,8 @@ class FileRoute implements Routes {
       multer({ dest: TEMP_FOLDER, limits: { fieldSize: 8 * 1024 * 1024 } }).single('file'),
       this.controller.uploadTemp,
     );
+
+    this.router.get(`${this.path}/image/:id`, this.controller.getImage);
   }
 }
 
