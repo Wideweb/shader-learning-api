@@ -18,6 +18,20 @@ class FileController {
       next(error);
     }
   };
+
+  public getImage = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const buffer = await amazonFileStorage.get(`Images/${req.params.id}`);
+
+      res.setHeader('Cross-Origin-Resource-Policy', '*');
+      res.setHeader('Cross-Origin-Opener-Policy', '*');
+      res.setHeader('Cross-Origin-Embedder-Policy', '*');
+      res.writeHead(200, { 'Content-Type': 'image/*' });
+      res.end(buffer);
+    } catch (error) {
+      next(error);
+    }
+  };
 }
 
 export default FileController;
