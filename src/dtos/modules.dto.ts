@@ -11,6 +11,7 @@ export class ModuleDto {
   locked: boolean;
   cover: boolean;
   pageHeaderImage: boolean;
+  randomTaskAccess: boolean;
 }
 
 export class CreateModuleDto {

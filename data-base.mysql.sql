@@ -70,6 +70,7 @@ CREATE TABLE `Modules`(
 	`Order` INT NOT NULL,
 	`Cover` TINYINT DEFAULT 1,
 	`PageHeaderImage` TINYINT DEFAULT 1,
+	`RandomTaskAccess` TINYINT DEFAULT 0,
 
 	PRIMARY KEY (`Id`),
 	FOREIGN KEY (`CreatedBy`) REFERENCES `Users`(`Id`)
