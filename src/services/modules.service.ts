@@ -25,6 +25,7 @@ class ModulesService {
       Locked: module.locked ? 1 : 0,
       Cover: module.cover ? 1 : 0,
       PageHeaderImage: module.pageHeaderImage ? 1 : 0,
+      RandomTaskAccess: 0,
     });
 
     if (moduleId < 0) {
@@ -63,6 +64,7 @@ class ModulesService {
       Locked: module.locked ? 1 : 0,
       Cover: module.cover ? 1 : 0,
       PageHeaderImage: module.pageHeaderImage ? 1 : 0,
+      RandomTaskAccess: findModule.RandomTaskAccess,
     });
 
     if (!result) {
@@ -103,6 +105,7 @@ class ModulesService {
       tasks,
       cover: module.Cover == 1,
       pageHeaderImage: module.PageHeaderImage == 1,
+      randomTaskAccess: module.RandomTaskAccess == 1,
     };
   }
 
@@ -113,7 +116,7 @@ class ModulesService {
     }
 
     const user = await userRepository.findUserById(module.CreatedBy);
-    const tasks = await taskService.getUserModuleTaskResults(userId, moduleId);
+    const tasks = await taskService.getUserModuleTaskResults(userId, moduleId, module.RandomTaskAccess == 1);
 
     return {
       id: module.Id,

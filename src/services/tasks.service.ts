@@ -257,7 +257,7 @@ class TaskService {
     }));
   }
 
-  public async getUserModuleTaskResults(userId: number, moduleId: number): Promise<UserTaskResultDto[]> {
+  public async getUserModuleTaskResults(userId: number, moduleId: number, randomAccess: boolean): Promise<UserTaskResultDto[]> {
     const tasks = await taskRepository.getUserModuleTaskResults(userId, moduleId);
     const currentTask = tasks.find(it => !it.Accepted);
 
@@ -270,7 +270,7 @@ class TaskService {
       accepted: task.Accepted > 0,
       rejected: task.Rejected > 0,
       match: task.Score / task.Cost,
-      locked: currentTask && task.Order > currentTask.Order && task.Accepted != 1,
+      locked: !randomAccess && currentTask && task.Order > currentTask.Order && task.Accepted != 1,
     }));
   }
 

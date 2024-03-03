@@ -7,6 +7,7 @@ export interface ModuleModel {
   Locked: 0 | 1;
   Cover: 0 | 1;
   PageHeaderImage: 0 | 1;
+  RandomTaskAccess: 0 | 1;
 }
 
 export interface ModuleListModel {
